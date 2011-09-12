@@ -56,7 +56,7 @@ void MatrixDRTBuilder::taskCreated(const AbstractDRTBuilder::TaskArgs& args){
 	jobs.clear();
 	edges.clear();
 }
-
+*
 /** Produce output */
 std::vector<MatrixTask*> MatrixDRTBuilder::produce(){
 	std::vector<MatrixTask*> retval = tasks;
