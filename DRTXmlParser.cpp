@@ -23,7 +23,7 @@ void DRTXmlParser::parse(const string& xml, AbstractDRTBuilder* builder) const {
 	// Parse the Xml string
 	DOMElement* root = DOMElement::loadXML(xml);
 
-	parseElement(root);
+	parseElement(root, builder);
 }
 
 void DRTXmlParser::parseElement(DOMElement* element, AbstractDRTBuilder* builder) const {
@@ -81,9 +81,9 @@ void DRTXmlParser::parseJob(DOMElement* element, AbstractDRTBuilder* builder) co
 	args.wcet = atoi(element->getAttribute("wcet").c_str());
 	args.deadline = atoi(element->getAttribute("deadline").c_str());
 	if(element->hasAttribute("x"))
-		args.x = atof(element->getAttribute("x"));
+		args.x = atof(element->getAttribute("x").c_str());
 	if(element->hasAttribute("y"))
-		args.y = atof(element->getAttribute("y"));
+		args.y = atof(element->getAttribute("y").c_str());
 	builder->addJob(args);
 }
 

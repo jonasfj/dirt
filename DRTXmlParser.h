@@ -15,9 +15,10 @@ public:
 	~DRTXmlParser();
 	void parse(const std::string& xml, AbstractDRTBuilder* builder) const;
 private:
-	void parseElement(DOMElement* element, AbstractDRTBuilder* builder) const;
-	void parseJob(DOMElement* element, AbstractDRTBuilder* builder) const;
-	void parseEdge(DOMElement* element, AbstractDRTBuilder* builder) const;
+	void parseElement(XMLSP::DOMElement* element, AbstractDRTBuilder* builder) const;
+	void parseTask(XMLSP::DOMElement* element, AbstractDRTBuilder* builder) const;
+	void parseJob(XMLSP::DOMElement* element, AbstractDRTBuilder* builder) const;
+	void parseEdge(XMLSP::DOMElement* element, AbstractDRTBuilder* builder) const;
 };
 
 #endif /* DRTXMLPARSER_H */
