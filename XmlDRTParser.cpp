@@ -1,4 +1,4 @@
-#include "DRTXmlParser.h"
+#include "XmlDRTParser.h"
 
 #include "xmlsp/xmlsp_dom.h"
 #include "AbstractDRTBuilder.h"
@@ -11,22 +11,22 @@ using namespace XMLSP;
 using namespace std;
 
 /** Create DRT-Xml parser*/
-DRTXmlParser::DRTXmlParser(){}
+XmlDRTParser::XmlDRTParser(){}
 
 /** Release resources held by this parser */
-DRTXmlParser::~DRTXmlParser(){}
+XmlDRTParser::~XmlDRTParser(){}
 
 /** Parse XML string to DRT-builder
  * @remarks Well formed XML is assumed, that is the order of tags actually matters!
  */
-void DRTXmlParser::parse(const string& xml, AbstractDRTBuilder* builder) const {
+void XmlDRTParser::parse(const string& xml, AbstractDRTBuilder* builder) const {
 	// Parse the Xml string
 	DOMElement* root = DOMElement::loadXML(xml);
 
 	parseElement(root, builder);
 }
 
-void DRTXmlParser::parseElement(DOMElement* element, AbstractDRTBuilder* builder) const {
+void XmlDRTParser::parseElement(DOMElement* element, AbstractDRTBuilder* builder) const {
 	DOMElements elements = element->getChilds();
 	DOMElements::iterator it;
 	for(it = elements.begin(); it != elements.end(); it++){
@@ -38,10 +38,10 @@ void DRTXmlParser::parseElement(DOMElement* element, AbstractDRTBuilder* builder
 	}
 }
 
-void DRTXmlParser::parseTask(DOMElement* element, AbstractDRTBuilder* builder) const {
+void XmlDRTParser::parseTask(DOMElement* element, AbstractDRTBuilder* builder) const {
 	assert(element->hasAttribute("name"));
 	if(!element->hasAttribute("name")){
-		fprintf(stderr, "Attribute on missing in DRTXmlParser::parseTask\n");
+		fprintf(stderr, "Attribute on missing in XmlDRTParser::parseTask\n");
 		return;
 	}
 
@@ -69,10 +69,10 @@ void DRTXmlParser::parseTask(DOMElement* element, AbstractDRTBuilder* builder) c
 	builder->taskCreated(args);
 }
 
-void DRTXmlParser::parseJob(DOMElement* element, AbstractDRTBuilder* builder) const {
+void XmlDRTParser::parseJob(DOMElement* element, AbstractDRTBuilder* builder) const {
 	assert(element->hasAttribute("name") && element->hasAttribute("wcet") && element->hasAttribute("deadline"));
 	if(!element->hasAttribute("name") || !element->hasAttribute("wcet") || !element->hasAttribute("deadline")){
-		fprintf(stderr, "Attribute on missing in DRTXmlParser::parseJob\n");
+		fprintf(stderr, "Attribute on missing in XmlDRTParser::parseJob\n");
 		return;
 	}
 
@@ -87,10 +87,10 @@ void DRTXmlParser::parseJob(DOMElement* element, AbstractDRTBuilder* builder) co
 	builder->addJob(args);
 }
 
-void DRTXmlParser::parseEdge(DOMElement* element, AbstractDRTBuilder* builder) const {
+void XmlDRTParser::parseEdge(DOMElement* element, AbstractDRTBuilder* builder) const {
 	assert(element->hasAttribute("src") && element->hasAttribute("dst") && element->hasAttribute("mtime"));
 	if(!element->hasAttribute("src") || !element->hasAttribute("dst") || !element->hasAttribute("mtime")){
-		fprintf(stderr, "Attribute on missing in DRTXmlParser::parseEdge\n");
+		fprintf(stderr, "Attribute on missing in XmlDRTParser::parseEdge\n");
 		return;
 	}
 

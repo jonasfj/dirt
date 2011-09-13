@@ -1,5 +1,5 @@
-#ifndef DRTXMLPARSER_H
-#define DRTXMLPARSER_H
+#ifndef XMLDRTPARSER_H
+#define XMLDRTPARSER_H
 
 namespace XMLSP{
 	class DOMElement;
@@ -9,10 +9,10 @@ class AbstractDRTBuilder;
 #include <string>
 
 /** Parser for reading DRT-XML files */
-class DRTXmlParser{
+class XmlDRTParser{
 public:
-	DRTXmlParser();
-	~DRTXmlParser();
+	XmlDRTParser();
+	~XmlDRTParser();
 	void parse(const std::string& xml, AbstractDRTBuilder* builder) const;
 private:
 	void parseElement(XMLSP::DOMElement* element, AbstractDRTBuilder* builder) const;
@@ -21,4 +21,4 @@ private:
 	void parseEdge(XMLSP::DOMElement* element, AbstractDRTBuilder* builder) const;
 };
 
-#endif /* DRTXMLPARSER_H */
+#endif /* XMLDRTPARSER_H */
