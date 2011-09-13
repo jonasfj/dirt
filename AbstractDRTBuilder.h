@@ -12,6 +12,7 @@ public:
 	 */
 	struct TaskArgs{
 		std::string name;	///< Unique name of the task
+		bool operator!=(const TaskArgs& args) const { return name != args.name; }
 	};
 	/** Arguments for creating a new job */
 	struct JobArgs{
