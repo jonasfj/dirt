@@ -3,6 +3,7 @@
 
 #include <assert.h>
 #include <limits.h>
+#include <string>
 
 MatrixDRTBuilder::MatrixDRTBuilder(){
 	hasTask = false;

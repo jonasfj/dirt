@@ -2,6 +2,7 @@
 #define MATRIXTASK_H
 
 #include <limits.h>
+#include <string>
 
 class MatrixDRTBuilder;
 
@@ -14,7 +15,7 @@ class MatrixTask{
 		int deadline;
 	};
 
-	MatrixTask(unsigned int jobs){
+	MatrixTask(size_t jobs){
 		_mtimes = NULL;
 		_jobs = NULL;
 		_nb_jobs = jobs;
@@ -25,11 +26,11 @@ public:
 
 	~MatrixTask(){
 		if(_mtimes){
-			delete _mtimes;
+			delete[] _mtimes;
 			_mtimes = NULL;
 		}
 		if(_jobs){
-			delete _jobs;
+			delete[] _jobs;
 			_jobs = NULL;
 		}
 	}
@@ -38,7 +39,7 @@ public:
 	const std::string& name() const { return _name; }
 
 	/** Number of jobs */
-	unsigned int jobs() const { return _nb_jobs; }
+	size_t jobs() const { return _nb_jobs; }
 
 	/** Name of a job */
 	const std::string& name(JobId job) const { return _jobs[job].name; }
@@ -61,7 +62,7 @@ public:
 private:
 	std::string	_name;			///< Name of the task
 	Job* _jobs;					///< Jobs in the task
-	unsigned int _nb_jobs;		///< Number of jobs
+	size_t _nb_jobs;			///< Number of jobs
 	int* _mtimes;				///< Minimum inter-release time between two jobs, negative if no edge
 
 	friend class MatrixDRTBuilder;
