@@ -3,7 +3,9 @@
 
 #include <limits.h>
 #include <string>
+#include <vector>
 
+class AbstractDRTBuilder;
 class MatrixDRTBuilder;
 
 /** Matrix representation of a task */
@@ -59,6 +61,9 @@ public:
 	bool edge(JobId src, JobId dst) const{
 		return _mtimes[src + jobs()*dst] == INT_MAX;
 	}
+
+	void produce(AbstractDRTBuilder* builder) const;
+	static void produce(const std::vector<MatrixTask*>& tasks, AbstractDRTBuilder* builder);
 private:
 	std::string	_name;			///< Name of the task
 	Job* _jobs;					///< Jobs in the task

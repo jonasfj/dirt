@@ -1,0 +1,18 @@
+Digraph Realtime Task Framework
+===============================
+_A framework for schedulability analysis of Digraph Realtime Task Models._
+
+Things To Do
+------------
+  * Add `main.cpp` with `getopt_long` for reading options (See bnc for an example)
+  * Create `RandomDRTGenerator` with `generate(AbstractDRTBuilder* builder, int seed = 0) const` member
+  * Output Demand-Bound-Function as graph, look at step functions with gnuplot (consider public DemandTuple)
+  * Implement `MonotonicUtilizationAlgorithm` using observations from Lawler
+  * Implement `BinaryUtilizationAlgorihtm` using observations from Lawler
+  * Wrap the framework in a namespace, come up with a fancy name!
+  * Configure a build system using cmake
+  * Add fancy Qt graphical user interface, reuse architecture from PeTe, but make it single document interface
+  * Integrate documentation generation with build system
+
+
+
