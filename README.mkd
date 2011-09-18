@@ -4,9 +4,10 @@ _A framework for schedulability analysis of Digraph Realtime Task Models._
 
 Things To Do
 ------------
+  * Check what `deadline(u) < delay(u, v)` means for utilization and DBF algorithms, there's an impact!
   * Add `main.cpp` with `getopt_long` for reading options (See bnc for an example)
-  * Create `RandomDRTGenerator` with `generate(AbstractDRTBuilder* builder, int seed = 0) const` member
   * Output Demand-Bound-Function as graph, look at step functions with gnuplot (consider public DemandTuple)
+  * Refactor `mtime` should be renamed to `delay` in all the places it's used
   * Implement `MonotonicUtilizationAlgorithm` using observations from Lawler
   * Implement `BinaryUtilizationAlgorihtm` using observations from Lawler
   * Wrap the framework in a namespace, come up with a fancy name!

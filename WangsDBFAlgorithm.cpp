@@ -1,5 +1,7 @@
 #include "WangsDBFAlgorithm.h"
 
+#include <assert.h>
+
 WangsDBFAlgorithm::WangsDBFAlgorithm(const MatrixTask* task, int time){
 	_time = time;
 	_task = task;
@@ -24,8 +26,8 @@ void WangsDBFAlgorithm::compute(){
 	assert(waitingLists.size() == _task->jobs());
 
 	// This will at most take t steps, but we look out for when nothing new is generated
-	for(int t = 0; t < time; t++){
-		bool created_new = false
+	for(int t = 0; t < _time; t++){
+		bool created_new = false;
 		for(MatrixTask::JobId j = 0; j < _task->jobs(); j++)
 			created_new |= expandTuples(j);
 		// When nothing new is generated, there's no recent to iterate any further
