@@ -1,5 +1,6 @@
 #include "DotDRTBuilder.h"
 
+#include <iostream>
 #include <assert.h>
 
 using namespace std;
@@ -23,7 +24,7 @@ string DotDRTBuilder::escape(const std::string& text) const{
 
 void DotDRTBuilder::createTask(const AbstractDRTBuilder::TaskArgs& args){
 	jobs.clear();
-	out << "\tsubgraph task" << id++ << " {" << endl;
+	out << "\tsubgraph cluster_" << id++ << " {" << endl;
 	out << "\t\tlabel=\"" << escape(args.name) << "\";" << endl;
 	out << "\t\tstyle=filled;" << endl;
 	out << "\t\tcolor=lightgrey;" << endl;
@@ -35,8 +36,8 @@ void DotDRTBuilder::addJob(const AbstractDRTBuilder::JobArgs& args){
 	je.id = id++;
 	je.name = args.name;
 	jobs.push_back(je);
-	out << "\t\tjob" << je.id << " [label=\"" << escape(args.name) << " " 
-		<< args.wcet << "," << args.deadline << "\"];" << endl;
+	out << "\t\tjob" << je.id << " [label=\"" << escape(args.name) << " (" 
+		<< args.wcet << "," << args.deadline << ")\"];" << endl;
 }
 
 /** Get job id for a job of the current task */

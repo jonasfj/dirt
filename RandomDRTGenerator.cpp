@@ -116,6 +116,7 @@ void RandomDRTGenerator::generate(AbstractDRTBuilder* builder, unsigned int seed
 			// Create proposed edge
 			AbstractDRTBuilder::EdgeArgs edge;
 				edge.mtime = random(minDelay, maxDelay);
+			edge.src = "job" + int2str(src);
 			edge.dst = "job" + int2str(dst);
 			if(delayAlwaysLongerThanDeadline && minDelay < deadlines[src])
 				edge.mtime = random(deadlines[src], maxDelay);

@@ -19,7 +19,7 @@ bool ValidatingDRTBuilder::hasError () const {
 
 /** Report error to what-ever error stream we've got */
 void ValidatingDRTBuilder::reportError(const std::string& message){
-	_err << "ValidatingDRTBuilder: " << std::endl;
+	_err << "ValidatingDRTBuilder: " << message << std::endl;
 	_hasError = true;
 }
 
@@ -53,7 +53,7 @@ void ValidatingDRTBuilder::addJob(const AbstractDRTBuilder::JobArgs& args){
 	else if(!_allowingJobs)
 		reportError("addJob() cannot be called after addEdge()");
 	else if(hasJob(args.name))
-		reportError("Jobs must have unique names");
+		reportError("Jobs must have unique names, \"" + args.name + "\" is not unique");
 	else if(args.wcet > args.deadline)
 		reportError("Relative deadline cannot be bigger than worst case execution time");
 	else
@@ -66,9 +66,9 @@ void ValidatingDRTBuilder::addEdge(const AbstractDRTBuilder::EdgeArgs& args){
 		reportError("addEdge called before createTask() or after taskCreated()");
 	else{
 		if(!hasJob(args.src))
-			reportError("Referenced source job in addEdge() doesn't exists");
+			reportError("Referenced source \"" + args.src  + "\" job in addEdge() doesn't exists");
 		if(!hasJob(args.dst))
-			reportError("Referenced source job in addEdge() doesn't exists");
+			reportError("Referenced source \"" + args.dst  + "\" job in addEdge() doesn't exists");
 		if(args.mtime < 0)
 			reportError("Minimum inter-release time cannot be negative");
 	}
@@ -80,6 +80,7 @@ void ValidatingDRTBuilder::taskCreated(const AbstractDRTBuilder::TaskArgs& args)
 	else if(_cTask != args)
 		reportError("taskCreated() called with different arguments from createTask()");
 	_jobs.clear();
+	_creatingTask = false;
 }
 
 

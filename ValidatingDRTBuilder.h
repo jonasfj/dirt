@@ -5,13 +5,13 @@
 
 #include <string>
 #include <vector>
-#include <ostream>
+#include <iostream>
 
 /** Validate the input for a DRT builder */
 class ValidatingDRTBuilder : public AbstractDRTBuilder{
 	typedef std::vector<std::string> StringList;
 public:
-	ValidatingDRTBuilder(std::ostream& err);
+	ValidatingDRTBuilder(std::ostream& err = std::cerr);
 	void createTask(const AbstractDRTBuilder::TaskArgs& args);
 	void addJob(const AbstractDRTBuilder::JobArgs& args);
 	void addEdge(const AbstractDRTBuilder::EdgeArgs& args);
