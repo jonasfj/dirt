@@ -1,6 +1,6 @@
 #include "XmlDRTParser.h"
 
-#include "xmlsp/xmlsp_dom.h"
+#include <xmlsp_dom.h>
 #include "AbstractDRTBuilder.h"
 
 #include <stdlib.h>
