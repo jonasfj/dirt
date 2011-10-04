@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <sstream>
 
 using namespace XMLSP;
 using namespace std;
@@ -19,11 +20,24 @@ XmlDRTParser::~XmlDRTParser(){}
 /** Parse XML string to DRT-builder
  * @remarks Well formed XML is assumed, that is the order of tags actually matters!
  */
-void XmlDRTParser::parse(const string& xml, AbstractDRTBuilder* builder) const {
+bool XmlDRTParser::parse(istream& data, AbstractDRTBuilder* builder) const {
+	stringstream buffer;
+	buffer << data.rdbuf();
+	return parse(buffer.str(), builder);
+}
+
+/** Parse XML string to DRT-builder
+ * @remarks Well formed XML is assumed, that is the order of tags actually matters!
+ */
+bool XmlDRTParser::parse(const string& xml, AbstractDRTBuilder* builder) const {
 	// Parse the Xml string
 	DOMElement* root = DOMElement::loadXML(xml);
-
-	parseElement(root, builder);
+	assert(root);
+	if(root){
+		parseElement(root, builder);
+		delete root;
+	}
+	return root != NULL;
 }
 
 void XmlDRTParser::parseElement(DOMElement* element, AbstractDRTBuilder* builder) const {
@@ -50,21 +64,21 @@ void XmlDRTParser::parseTask(DOMElement* element, AbstractDRTBuilder* builder) c
 
 	builder->createTask(args);
 
+	EdgeList edges;
+
 	DOMElements elements = element->getChilds();
 	DOMElements::iterator it;
-	bool parsing_jobs = true;
 	for(it = elements.begin(); it != elements.end(); it++){
 		string name = (*it)->getElementName();
 		if(name == "job"){
-			assert(parsing_jobs);
-			if(parsing_jobs)	//Don't parse jobs if not added in right order
-				parseJob(*it, builder);
+			parseJob(*it, builder);
 		}else if(name == "edge"){
-			parsing_jobs = false;	//We can't go back to adding jobs after the first edge
-			parseEdge(*it, builder);
+			parseEdge(*it, edges);
 		}else
 			assert(false);
 	}
+	for(EdgeList::iterator edge = edges.begin(); edge != edges.end(); edge++)
+		builder->addEdge(*edge);
 
 	builder->taskCreated(args);
 }
@@ -87,16 +101,19 @@ void XmlDRTParser::parseJob(DOMElement* element, AbstractDRTBuilder* builder) co
 	builder->addJob(args);
 }
 
-void XmlDRTParser::parseEdge(DOMElement* element, AbstractDRTBuilder* builder) const {
-	assert(element->hasAttribute("src") && element->hasAttribute("dst") && element->hasAttribute("mtime"));
-	if(!element->hasAttribute("src") || !element->hasAttribute("dst") || !element->hasAttribute("mtime")){
+void XmlDRTParser::parseEdge(DOMElement* element, EdgeList& edges) const {
+	assert(element->hasAttribute("source") &&
+		   element->hasAttribute("destination") &&
+		   element->hasAttribute("delay"));
+	if(!element->hasAttribute("source") ||
+	   !element->hasAttribute("destination") ||
+	   !element->hasAttribute("delay")){
 		fprintf(stderr, "Attribute on missing in XmlDRTParser::parseEdge\n");
 		return;
 	}
-
 	AbstractDRTBuilder::EdgeArgs args;
-	args.src = element->getAttribute("src");
-	args.dst = element->getAttribute("dst");
-	args.mtime = atoi(element->getAttribute("mtime").c_str());
-	builder->addEdge(args);
+	args.src = element->getAttribute("source");
+	args.dst = element->getAttribute("destination");
+	args.mtime = atoi(element->getAttribute("delay").c_str());
+	edges.push_back(args);
 }

@@ -32,7 +32,9 @@ namespace Options{
 		Version = 1,			///< Show version number
 		Help,					///< Show help message
 		Generate,				///< Generate new DRT
-		Validate				///< Validate input, write results to output
+		Validate,				///< Validate input, write results to output
+		Dot,					///< Dump to dot
+		Verify,					///< Verify scheduability of the DRT
 	};
 }
 
@@ -59,9 +61,10 @@ int main(int argc, char* argv[]){
 		{"generate",		no_argument,			(int*)&option,		Options::Generate	},
 		{"version",			no_argument,			(int*)&option,		Options::Version	},
 		{"validate",		no_argument,			(int*)&option,		Options::Validate	},
+		{"dot",				no_argument,			(int*)&option,		Options::Dot		},
 		// Optional options
 		{"input",			required_argument,		NULL,				'i'					},
-		{"output",			required_argument,		NULL,				'o'					 },
+		{"output",			required_argument,		NULL,				'o'					},
 		{0, 0, 0, 0}
 	};
 
@@ -137,13 +140,22 @@ int main(int argc, char* argv[]){
 
 	// Validate input
 	if(option == Options::Validate){
-		// Read file to string
-		std::stringstream buffer;
-		buffer << input->rdbuf();
 		// Create validator
 		ValidatingDRTBuilder validator(*output);
 		// Parse input
 		XmlDRTParser parser;
-		parser.parse(buffer.str(), &validator);
+		parser.parse(*input, &validator);
+		return validator.hasError() ? 2 : 0;
+	}
+
+	// Dump to dot
+	if(option == Options::Dot){
+		// Create dot builder
+		DotDRTBuilder dotter(*output);
+		// Parse input
+		XmlDRTParser parser;
+		bool succ = parser.parse(*input, &dotter);
+		dotter.finish();
+		return succ ? 0 : 3;
 	}
 }

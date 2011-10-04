@@ -20,14 +20,14 @@ void XmlDRTBuilder::addJob(const AbstractDRTBuilder::JobArgs& args){
 	out << "\t\t<job"
 		<< " name=\"" << escape(args.name) << "\" "
 		<< " wcet=\"" << args.wcet << "\""
-		<< " deadline=\"" << args.deadline << "\"\\>" << endl;
+		<< " deadline=\"" << args.deadline << "\"/>" << endl;
 }
 
 void XmlDRTBuilder::addEdge(const AbstractDRTBuilder::EdgeArgs& args){
 	out << "\t\t<edge"
 		<< " source=\"" << escape(args.src) << "\""
 		<< " destination=\"" << escape(args.dst) << "\""
-		<< " delay=\"" << args.mtime <<  "\"\\>" << endl;
+		<< " delay=\"" << args.mtime <<  "\"/>" << endl;
 }
 
 void XmlDRTBuilder::taskCreated(const AbstractDRTBuilder::TaskArgs& args){
