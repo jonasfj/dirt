@@ -14,6 +14,7 @@ If current working directory is the source root folder (called dirt/) just do:
 
 This assumes your dirt checkout is in dirt/, and it will leave compiled result in ../dirt-build/.
 You can define build type by giving -DCMAKE_BUILD_TYPE=Debug|Release to cmake.
+To build documentation (using doxygen) run make doc, and HTML documentation will be in doc/.
 
 Things To Do
 -------------------------------

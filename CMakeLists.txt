@@ -6,8 +6,12 @@ cmake_minimum_required(VERSION 2.8)
 project(dirt)
 
 # Set major and minor version, used in config.h.in
-set(dirt_VERSION_MAJOR 1)
-set(dirt_VERSION_MINOR 0)
+set(PROJECT_VERSION "0.1")
+
+# Use doxygen cmake module, for make doc target
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
+set(DOXYFILE_HTML_DIR "./")
+include(UseDoxygen)
 
 # Add dirt sources
 set(dirt_SOURCES dirt.cpp)

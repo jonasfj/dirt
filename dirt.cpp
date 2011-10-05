@@ -110,12 +110,12 @@ int main(int argc, char* argv[]){
 
 	// Show version information
 	if(option == Options::Version){
-		printf("Realtiming %d.%d\n"
+		printf("Realtiming %s\n"
 			   "Copyright (C) 2011 Jonas Finnemann Jensen <jopsen@gmail.com>.\n"
 			   "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
 			   "This is free software: you are free to change and redistribute it.\n"
 			   "There is NO WARRANTY, to the extent permitted by law.\n",
-				VERSION_MAJOR, VERSION_MINOR);
+				PROJECT_VERSION);
 		return 0;
 	}
 

@@ -2,7 +2,6 @@
 #define CONFIG_H
 
 // Define version number as defined in CMakeLists.txt
-#define VERSION_MAJOR @dirt_VERSION_MAJOR@
-#define VERSION_MINOR @dirt_VERSION_MINOR@
+#define PROJECT_VERSION @PROJECT_VERSION@
 
 #endif /* CONFIG_H */
