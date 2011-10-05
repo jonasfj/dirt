@@ -5,8 +5,10 @@
 #include <string>
 #include <vector>
 
-class AbstractDRTBuilder;
-class MatrixDRTBuilder;
+namespace DRT{
+	class AbstractDRTBuilder;
+namespace Matrix{
+	class MatrixDRTBuilder;
 
 /** Matrix representation of a task */
 class MatrixTask{
@@ -72,5 +74,8 @@ private:
 
 	friend class MatrixDRTBuilder;
 };
+
+} /* Matrix */
+} /* DRT */
 
 #endif /* MATRIXTASK_H */

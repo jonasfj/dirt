@@ -2,6 +2,11 @@
 
 #include <assert.h>
 
+using namespace DRT::Matrix;
+
+namespace DRT{
+namespace Verification{
+
 WangsDBFAlgorithm::WangsDBFAlgorithm(const MatrixTask* task, int time){
 	_time = time;
 	_task = task;
@@ -118,3 +123,5 @@ bool WangsDBFAlgorithm::DemandTupleList::pop(WangsDBFAlgorithm::DemandTuple& tup
 	return true;
 }
 
+} /* Verification */
+} /* DRT */

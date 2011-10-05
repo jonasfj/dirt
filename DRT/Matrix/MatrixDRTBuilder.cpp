@@ -5,6 +5,9 @@
 #include <limits.h>
 #include <string>
 
+namespace DRT{
+namespace Matrix{
+
 MatrixDRTBuilder::MatrixDRTBuilder(){
 	hasTask = false;
 }
@@ -15,7 +18,7 @@ MatrixDRTBuilder::~MatrixDRTBuilder(){
 }
 
 /** Create a task */
-void MatrixDRTBuilder::createTask(const AbstractDRTBuilder::TaskArgs& args){
+void MatrixDRTBuilder::createTask(const TaskArgs& args){
 	assert(!hasTask);
 	if(hasTask) taskCreated(task);
 	hasTask = true;
@@ -23,17 +26,17 @@ void MatrixDRTBuilder::createTask(const AbstractDRTBuilder::TaskArgs& args){
 }
 
 /** Add a new job (valid between calls to createTask and taskCreated) */
-void MatrixDRTBuilder::addJob(const AbstractDRTBuilder::JobArgs& args){
+void MatrixDRTBuilder::addJob(const JobArgs& args){
 	jobs.push_back(args);
 }
 
 /** Add a new edge (valid between calls to createTask and taskCreated) */
-void MatrixDRTBuilder::addEdge(const AbstractDRTBuilder::EdgeArgs& args){
+void MatrixDRTBuilder::addEdge(const EdgeArgs& args){
 	edges.push_back(args);
 }
 
 /** Invoke this when all jobs and edges in the task have been created */
-void MatrixDRTBuilder::taskCreated(const AbstractDRTBuilder::TaskArgs& args){
+void MatrixDRTBuilder::taskCreated(const TaskArgs& args){
 	unsigned int nb_jobs = jobs.size();
 	MatrixTask* t = new MatrixTask(nb_jobs);
 	t->_mtimes = (int*)new int[nb_jobs * nb_jobs];
@@ -53,9 +56,15 @@ void MatrixDRTBuilder::taskCreated(const AbstractDRTBuilder::TaskArgs& args){
 	tasks.push_back(t);
 
 	hasTask = false;
-	task = AbstractDRTBuilder::TaskArgs();
+	task = TaskArgs();
 	jobs.clear();
 	edges.clear();
+}
+
+/** Finsh build, please call produce to get the output and reset internal state */
+void MatrixDRTBuilder::finish(){
+	// Reset stuff, so we can start over...
+	hasTask = false;
 }
 
 /** Produce output */
@@ -65,3 +74,5 @@ std::vector<MatrixTask*> MatrixDRTBuilder::produce(){
 	return retval;
 }
 
+} /* Matrix */
+} /* DRT */

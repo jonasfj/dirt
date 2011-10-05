@@ -1,16 +1,16 @@
-#include "AbstractDRTBuilder.h"
+#include <DRT/AbstractDRTBuilder.h>
 
-#include "MatrixTask.h"
-#include "MatrixDRTBuilder.h"
+#include <DRT/Matrix/MatrixTask.h>
+#include <DRT/Matrix/MatrixDRTBuilder.h>
 
-#include "XmlDRTBuilder.h"
-#include "XmlDRTParser.h"
+#include <DRT/Xml/XmlDRTBuilder.h>
+#include <DRT/Xml/XmlDRTParser.h>
 
-#include "DotDRTBuilder.h"
-#include "RandomDRTGenerator.h"
+#include <DRT/Builders/DotDRTBuilder.h>
+#include <DRT/Misc/RandomDRTGenerator.h>
 
-#include "ValidatingDRTBuilder.h"
-#include "TeeDRTBuilder.h"
+#include <DRT/Builders/ValidatingDRTBuilder.h>
+#include <DRT/Builders/TeeDRTBuilder.h>
 
 #include "config.h"
 
@@ -26,6 +26,11 @@
 
 // GNU getopt From GLibc
 #include <getopt.h>
+
+using namespace DRT;
+using namespace DRT::Misc;
+using namespace DRT::Xml;
+using namespace DRT::Builders;
 
 namespace Options{
 	/** Primary options for main() */
@@ -137,8 +142,6 @@ int main(int argc, char* argv[]){
 		//rg.setTaskLimits(1,3);
 		//rg.setEdgeLimits(1,6);
 		rg.generate(b);
-		
-		xb.finish();
 	}
 
 	// Validate input
@@ -158,7 +161,6 @@ int main(int argc, char* argv[]){
 		// Parse input
 		XmlDRTParser parser;
 		bool succ = parser.parse(*input, &dotter);
-		dotter.finish();
 		return succ ? 0 : 3;
 	}
 }

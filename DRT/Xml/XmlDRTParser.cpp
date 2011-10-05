@@ -1,7 +1,7 @@
 #include "XmlDRTParser.h"
 
 #include <xmlsp_dom.h>
-#include "AbstractDRTBuilder.h"
+#include "../AbstractDRTBuilder.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -10,6 +10,9 @@
 
 using namespace XMLSP;
 using namespace std;
+
+namespace DRT{
+namespace Xml{
 
 /** Create DRT-Xml parser*/
 XmlDRTParser::XmlDRTParser(){}
@@ -36,6 +39,7 @@ bool XmlDRTParser::parse(const string& xml, AbstractDRTBuilder* builder) const {
 	if(root){
 		parseElement(root, builder);
 		delete root;
+		builder->finish();
 	}
 	return root != NULL;
 }
@@ -59,7 +63,7 @@ void XmlDRTParser::parseTask(DOMElement* element, AbstractDRTBuilder* builder) c
 		return;
 	}
 
-	AbstractDRTBuilder::TaskArgs args;
+	TaskArgs args;
 	args.name = element->getAttribute("name");
 
 	builder->createTask(args);
@@ -90,7 +94,7 @@ void XmlDRTParser::parseJob(DOMElement* element, AbstractDRTBuilder* builder) co
 		return;
 	}
 
-	AbstractDRTBuilder::JobArgs args;
+	JobArgs args;
 	args.name = element->getAttribute("name");
 	args.wcet = atoi(element->getAttribute("wcet").c_str());
 	args.deadline = atoi(element->getAttribute("deadline").c_str());
@@ -111,9 +115,12 @@ void XmlDRTParser::parseEdge(DOMElement* element, EdgeList& edges) const {
 		fprintf(stderr, "Attribute on missing in XmlDRTParser::parseEdge\n");
 		return;
 	}
-	AbstractDRTBuilder::EdgeArgs args;
+	EdgeArgs args;
 	args.src = element->getAttribute("source");
 	args.dst = element->getAttribute("destination");
 	args.mtime = atoi(element->getAttribute("delay").c_str());
 	edges.push_back(args);
 }
+
+} /* Xml */
+} /* DRT */

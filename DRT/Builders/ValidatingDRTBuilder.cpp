@@ -1,7 +1,18 @@
 #include "ValidatingDRTBuilder.h"
 
+namespace DRT{
+namespace Builders{
+
 ValidatingDRTBuilder::ValidatingDRTBuilder(std::ostream& err) : _err(err) {
 	reset();
+}
+
+/** Finished creating tasks
+ * @remarks Use reset() to clear the state of hasError()
+ */
+void ValidatingDRTBuilder::finish(){
+	_jobs.clear();
+	_tasks.clear();
 }
 
 /** Reset validating builder */
@@ -31,11 +42,10 @@ bool ValidatingDRTBuilder::hasJob(const std::string& name){
 	return exists;
 }
 
-void ValidatingDRTBuilder::createTask(const AbstractDRTBuilder::TaskArgs& args){
+void ValidatingDRTBuilder::createTask(const TaskArgs& args){
 	if(_creatingTask)
 		reportError("createTask() called before previous task creation was finished with taskCreated()");
 	_cTask = args;
-	_allowingJobs = true;
 	_creatingTask = true;
 	_jobs.clear();
 	bool nameClash = false;
@@ -47,11 +57,9 @@ void ValidatingDRTBuilder::createTask(const AbstractDRTBuilder::TaskArgs& args){
 		_tasks.push_back(args.name);
 }
 
-void ValidatingDRTBuilder::addJob(const AbstractDRTBuilder::JobArgs& args){
+void ValidatingDRTBuilder::addJob(const JobArgs& args){
 	if(!_creatingTask)
 		reportError("addJob() called before createTask() or after taskCreated()");
-	else if(!_allowingJobs)
-		reportError("addJob() cannot be called after addEdge()");
 	else if(hasJob(args.name))
 		reportError("Jobs must have unique names, \"" + args.name + "\" is not unique");
 	else if(args.wcet > args.deadline)
@@ -60,8 +68,7 @@ void ValidatingDRTBuilder::addJob(const AbstractDRTBuilder::JobArgs& args){
 		_jobs.push_back(args.name);
 }
 
-void ValidatingDRTBuilder::addEdge(const AbstractDRTBuilder::EdgeArgs& args){
-	_allowingJobs = false;
+void ValidatingDRTBuilder::addEdge(const EdgeArgs& args){
 	if(!_creatingTask)
 		reportError("addEdge called before createTask() or after taskCreated()");
 	else{
@@ -74,7 +81,7 @@ void ValidatingDRTBuilder::addEdge(const AbstractDRTBuilder::EdgeArgs& args){
 	}
 }
 
-void ValidatingDRTBuilder::taskCreated(const AbstractDRTBuilder::TaskArgs& args){
+void ValidatingDRTBuilder::taskCreated(const TaskArgs& args){
 	if(!_creatingTask)
 		reportError("taskCreated() called before createTask()");
 	else if(_cTask != args)
@@ -83,4 +90,6 @@ void ValidatingDRTBuilder::taskCreated(const AbstractDRTBuilder::TaskArgs& args)
 	_creatingTask = false;
 }
 
+} /* Builders */
+} /* DRT */
 

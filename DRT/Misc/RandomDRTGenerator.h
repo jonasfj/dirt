@@ -3,8 +3,11 @@
 
 #include <string>
 
-class AbstractDRTBuilder;
+namespace DRT{
+	class AbstractDRTBuilder;
+namespace Misc{
 
+/** Generator for building random DRTs */
 class RandomDRTGenerator{
 public:
 	RandomDRTGenerator();
@@ -12,13 +15,13 @@ public:
 	void setTaskLimits(int min = -1, int max = -1);
 	void setJobLimits(int min = -1, int max = -1);
 	void setEdgeLimits(int min = -1, int max = -1);
-	void setDelayLimits(int min = -1, int max = -1, bool alwaysLongerThanDeadline = true);
+	void setDelayLimits(int min = -1, int max = -1, bool forceFrameSeparation = true);
 	void setWCETLimits(int min = -1, int max = -1);
 	void setSlackLimits(int min = -1, int max = -1);
 private:
 	int random(int min, int max) const;
 	std::string int2str(int n) const;
-	bool delayAlwaysLongerThanDeadline;
+	bool forceFrameSeparation;
 	int minTasks;				///< Minimum number of tasks
 	int maxTasks;				///< Maximum number of tasks
 	int minJobs;				///< Minimum number of jobs
@@ -32,5 +35,8 @@ private:
 	int minSlack;				///< Minimum slack < deadline - wcet
 	int maxSlack;				///< Maximum slack > deadline - wcet
 };
+
+} /* Misc */
+} /* DRT */
 
 #endif /* RANDOMDRTGENERATOR_H */

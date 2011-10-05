@@ -1,8 +1,13 @@
 #include "WangsUtilizationAlgorithm.h"
 
-#include "MatrixTask.h"
+#include "../Matrix/MatrixTask.h"
 
 #include <assert.h>
+
+using namespace DRT::Matrix;
+
+namespace DRT{
+namespace Verification{
 
 /** Compute worst case execution time and accumulated inter-release time */
 double WangsUtilizationAlgorithm::computeUtilization(const MatrixTask* task){
@@ -88,3 +93,5 @@ void WangsUtilizationAlgorithm::UtilizationTupleList::insert(const UtilizationTu
 		tuples.push_back(tuple);
 }
 
+} /* Verification */
+} /* DRT */

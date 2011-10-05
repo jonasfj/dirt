@@ -5,10 +5,15 @@
 
 using namespace std;
 
+namespace DRT{
+namespace Builders{
+
 /** Create instance of DotDRTBuilder with results written to output  */
 DotDRTBuilder::DotDRTBuilder(ostream& output) : out(output) {
 	id = 1;		// Reserve 0 as invalid id
 	out << "digraph DRT{ " << endl;
+	out << "\tnode [fontsize=10];" << endl;
+	out << "\tedge [fontsize=10];" << endl;
 }
 
 /** Finish the dot graph, e.g. write closing tags to output stream */
@@ -22,7 +27,7 @@ string DotDRTBuilder::escape(const std::string& text) const{
 	return text;
 }
 
-void DotDRTBuilder::createTask(const AbstractDRTBuilder::TaskArgs& args){
+void DotDRTBuilder::createTask(const TaskArgs& args){
 	jobs.clear();
 	out << "\tsubgraph cluster_" << id++ << " {" << endl;
 	out << "\t\tlabel=\"" << escape(args.name) << "\";" << endl;
@@ -31,7 +36,7 @@ void DotDRTBuilder::createTask(const AbstractDRTBuilder::TaskArgs& args){
 	out << "\t\tnode [style=filled,color=white];" << endl;
 }
 
-void DotDRTBuilder::addJob(const AbstractDRTBuilder::JobArgs& args){
+void DotDRTBuilder::addJob(const JobArgs& args){
 	JobEntry je;
 	je.id = id++;
 	je.name = args.name;
@@ -50,14 +55,16 @@ int DotDRTBuilder::getJobId(const string& name) const{
 	return 0;	//We reserve 0 as invalid id
 }
 
-void DotDRTBuilder::addEdge(const AbstractDRTBuilder::EdgeArgs& args){
+void DotDRTBuilder::addEdge(const EdgeArgs& args){
 	out << "\t\tjob" << getJobId(args.src) << " -> job" << getJobId(args.dst)
 	   	<< " [label=\"" << args.mtime << "\"];" << endl;
 }
 
-void DotDRTBuilder::taskCreated(const AbstractDRTBuilder::TaskArgs& args){
+void DotDRTBuilder::taskCreated(const TaskArgs& args){
 	jobs.clear();
 	out << "\t}" << endl;
 }
 
+} /* Builders */
+} /* DRT */
 

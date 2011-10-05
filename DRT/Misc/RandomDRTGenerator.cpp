@@ -1,6 +1,6 @@
 #include "RandomDRTGenerator.h"
 
-#include "AbstractDRTBuilder.h"
+#include "../AbstractDRTBuilder.h"
 
 #include <time.h>
 #include <assert.h>
@@ -8,6 +8,9 @@
 #include <sstream>
 
 using namespace std;
+
+namespace DRT{
+namespace Misc{
 
 /** Create a random DRT generator */
 RandomDRTGenerator::RandomDRTGenerator(){
@@ -47,10 +50,10 @@ void RandomDRTGenerator::setEdgeLimits(int min, int max){
 }
 
 /** Set minimum and maximum delay (minimum inter-release time), value will not be altered if negative */
-void RandomDRTGenerator::setDelayLimits(int min, int max, bool alwaysLongerThanDeadline){
+void RandomDRTGenerator::setDelayLimits(int min, int max, bool forceFrameSeparation){
 	if(min >= 0) minDelay = min;
 	if(max >= 0) maxDelay = max;
-	delayAlwaysLongerThanDeadline = alwaysLongerThanDeadline;
+	this->forceFrameSeparation = forceFrameSeparation;
 }
 
 /** Set minimum and maximum worst case execution time, value will not be altered if negative */
@@ -82,7 +85,7 @@ void RandomDRTGenerator::generate(AbstractDRTBuilder* builder, unsigned int seed
 	int tasks = random(minTasks, maxTasks);
 	for(int t = 0; t < tasks; t++){
 		// Create a task
-		AbstractDRTBuilder::TaskArgs task;
+		TaskArgs task;
 		task.name = "task" + int2str(t);
 		builder->createTask(task);
 
@@ -90,7 +93,7 @@ void RandomDRTGenerator::generate(AbstractDRTBuilder* builder, unsigned int seed
 		int jobs = random(minJobs, maxJobs);
 		int deadlines[jobs];
 		for(int j = 0; j < jobs; j++){
-			AbstractDRTBuilder::JobArgs job;
+			JobArgs job;
 			job.name = "job" + int2str(j);
 			job.wcet = random(minWCET, maxWCET);
 			job.deadline = job.wcet + random(minSlack, maxSlack);
@@ -114,11 +117,11 @@ void RandomDRTGenerator::generate(AbstractDRTBuilder* builder, unsigned int seed
 			edge_map[src + dst * jobs] = true;		// Set the edge as created
 			edges--;								// One edge less to create
 			// Create proposed edge
-			AbstractDRTBuilder::EdgeArgs edge;
+			EdgeArgs edge;
 				edge.mtime = random(minDelay, maxDelay);
 			edge.src = "job" + int2str(src);
 			edge.dst = "job" + int2str(dst);
-			if(delayAlwaysLongerThanDeadline && minDelay < deadlines[src])
+			if(forceFrameSeparation && minDelay < deadlines[src])
 				edge.mtime = random(deadlines[src], maxDelay);
 			else
 				edge.mtime = random(minDelay, maxDelay);
@@ -128,5 +131,9 @@ void RandomDRTGenerator::generate(AbstractDRTBuilder* builder, unsigned int seed
 		// Done creating a task
 		builder->taskCreated(task);
 	}
+
+	builder->finish();
 }
 
+} /* Misc */
+} /* DRT */

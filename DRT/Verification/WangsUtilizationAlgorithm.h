@@ -1,9 +1,12 @@
 #ifndef WANGSUTILIZATIONALGORITHM_H
 #define WANGSUTILIZATIONALGORITHM_H
 
-#include "MatrixTask.h"
+#include "../Matrix/MatrixTask.h"
 
 #include <vector>
+
+namespace DRT{
+namespace Verification{
 
 /** An implementation Wangs utilization algorithm as presented in "The Digraph Real-Time Task Model" 2011 */
 class WangsUtilizationAlgorithm{
@@ -13,7 +16,7 @@ class WangsUtilizationAlgorithm{
 	struct UtilizationTuple{
 		int wcet;								///< Accumulated worst case execution time
 		int time;								///< Accumulated inter-release time
-		MatrixTask::JobId start;				///< Vertex from which the path abstracted by this tuple started
+		Matrix::MatrixTask::JobId start;		///< Vertex from which the path abstracted by this tuple started
 	};
 	/** List of utilization tuples */
 	class UtilizationTupleList{
@@ -27,11 +30,14 @@ class WangsUtilizationAlgorithm{
 		std::vector<UtilizationTuple> tuples;
 	};
 public:
-	double computeUtilization(const MatrixTask* task);
+	double computeUtilization(const Matrix::MatrixTask* task);
 private:
 	std::vector<UtilizationTupleList> places;	///< A UtilizationTupleList for each vertex/place
-	const MatrixTask* _task;
-	void expandTriples(MatrixTask::JobId place);
+	const Matrix::MatrixTask* _task;
+	void expandTriples(Matrix::MatrixTask::JobId place);
 };
+
+} /* Verification */
+} /* DRT */
 
 #endif /* WANGSUTILIZATIONALGORITHM_H */

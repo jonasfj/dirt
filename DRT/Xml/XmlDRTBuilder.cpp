@@ -2,6 +2,9 @@
 
 using namespace std;
 
+namespace DRT{
+namespace Xml{
+
 /** Create XmlDRTBuilder where XML stream is written to output stream */
 XmlDRTBuilder::XmlDRTBuilder(ostream& output) : out(output) {
 	out << "<drt>" << endl;
@@ -12,25 +15,25 @@ string XmlDRTBuilder::escape(const string& text) const{
 	return text;	//TODO Actually do an escape of the string...
 }
 
-void XmlDRTBuilder::createTask(const AbstractDRTBuilder::TaskArgs& args){
+void XmlDRTBuilder::createTask(const TaskArgs& args){
 	out << "\t<task name=\"" << escape(args.name) << "\">" << endl;
 }
 
-void XmlDRTBuilder::addJob(const AbstractDRTBuilder::JobArgs& args){
+void XmlDRTBuilder::addJob(const JobArgs& args){
 	out << "\t\t<job"
 		<< " name=\"" << escape(args.name) << "\" "
 		<< " wcet=\"" << args.wcet << "\""
 		<< " deadline=\"" << args.deadline << "\"/>" << endl;
 }
 
-void XmlDRTBuilder::addEdge(const AbstractDRTBuilder::EdgeArgs& args){
+void XmlDRTBuilder::addEdge(const EdgeArgs& args){
 	out << "\t\t<edge"
 		<< " source=\"" << escape(args.src) << "\""
 		<< " destination=\"" << escape(args.dst) << "\""
 		<< " delay=\"" << args.mtime <<  "\"/>" << endl;
 }
 
-void XmlDRTBuilder::taskCreated(const AbstractDRTBuilder::TaskArgs& args){
+void XmlDRTBuilder::taskCreated(const TaskArgs& args){
 	out << "\t</task>" << endl;
 }
 
@@ -39,3 +42,5 @@ void XmlDRTBuilder::finish(){
 	out << "</drt>" << endl;
 }
 
+} /* Xml */
+} /* DRT */
