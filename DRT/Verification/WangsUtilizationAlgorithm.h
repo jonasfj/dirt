@@ -17,24 +17,28 @@ class WangsUtilizationAlgorithm{
 		int wcet;								///< Accumulated worst case execution time
 		int time;								///< Accumulated inter-release time
 		Matrix::MatrixTask::JobId start;		///< Vertex from which the path abstracted by this tuple started
+		bool dominates(const UtilizationTuple& tuple) const;
 	};
 	/** List of utilization tuples */
 	class UtilizationTupleList{
 	public:
 		typedef std::vector<UtilizationTuple>::iterator iterator;
-		void insert(const UtilizationTuple& tuple);
+		bool insert(const UtilizationTuple& tuple);
 		iterator begin() { return tuples.begin(); }
 		iterator end() { return tuples.end(); }
-		iterator erase(iterator it) { return tuples.erase(it); }
+		bool pop(UtilizationTuple& tuple);
 	private:
 		std::vector<UtilizationTuple> tuples;
 	};
 public:
+	static double computeUtilization(const std::vector<Matrix::MatrixTask*>& tasks);
 	double computeUtilization(const Matrix::MatrixTask* task);
 private:
-	std::vector<UtilizationTupleList> places;	///< A UtilizationTupleList for each vertex/place
+	double bestUtilization;							///< Best utilization so far (for a loop)
+	std::vector<UtilizationTupleList> waitingLists;	///< Tuples waiting for to be expanded
+	std::vector<UtilizationTupleList> tupleLists;	///< Tuples generated so far...
 	const Matrix::MatrixTask* _task;
-	void expandTriples(Matrix::MatrixTask::JobId place);
+	bool expandTriples(Matrix::MatrixTask::JobId job);
 };
 
 } /* Verification */

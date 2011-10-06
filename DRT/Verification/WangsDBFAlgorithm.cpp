@@ -102,10 +102,8 @@ bool WangsDBFAlgorithm::DemandTupleList::insert(const WangsDBFAlgorithm::DemandT
 	}
 
 	// Check if a tuple with higher deadline is dominated by this tuple
-	while(mid != tuples.end()){
-		if(tuple.dominates(*mid))
-			mid = tuples.erase(mid);
-	}
+	while(mid != tuples.end() && tuple.dominates(*mid))
+		mid = tuples.erase(mid);
 
 	// Insert tuple at mid
 	tuples.insert(mid, tuple);

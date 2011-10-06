@@ -4,6 +4,7 @@
 #include <limits.h>
 #include <string>
 #include <vector>
+#include <assert.h>
 
 namespace DRT{
 	class AbstractDRTBuilder;
@@ -45,6 +46,16 @@ public:
 	/** Number of jobs */
 	size_t jobs() const { return _nb_jobs; }
 
+	/** Get jobid of a job */
+	JobId job(const std::string& name) const{
+		for(int i = 0; i < _nb_jobs; i++){
+			if(_jobs[i].name == name)
+				return i;
+		}
+		assert(false);
+		return -1;
+	}
+
 	/** Name of a job */
 	const std::string& name(JobId job) const { return _jobs[job].name; }
 
@@ -61,7 +72,7 @@ public:
 
 	/** True, if there's is an edge between src and dst */
 	bool edge(JobId src, JobId dst) const{
-		return _mtimes[src + jobs()*dst] == INT_MAX;
+		return _mtimes[src + jobs()*dst] != INT_MAX;
 	}
 
 	void produce(AbstractDRTBuilder* builder) const;

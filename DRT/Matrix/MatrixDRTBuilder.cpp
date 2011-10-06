@@ -43,15 +43,22 @@ void MatrixDRTBuilder::taskCreated(const TaskArgs& args){
 	t->_jobs = (MatrixTask::Job*)new MatrixTask::Job[nb_jobs];
 	t->_name = task.name;
 
+	// Add all jobs to t
 	for(unsigned int i = 0; i < nb_jobs; i++){
 		t->_jobs[i].name = jobs[i].name;
 		t->_jobs[i].wcet = jobs[i].wcet;
 		t->_jobs[i].deadline = jobs[i].deadline;
 	}
 
+	// Set all mtime to INT_MAX
 	for(unsigned int i = 0; i < nb_jobs; i++)
-		for(unsigned int j = 0; i < nb_jobs; j++)
+		for(unsigned int j = 0; j < nb_jobs; j++)
 			t->_mtimes[i + j * nb_jobs] = INT_MAX;
+
+	// Set mtime for all edges
+	for(unsigned int i = 0; i < edges.size(); i++){
+		t->_mtimes[t->job(edges[i].src) + t->job(edges[i].dst) * nb_jobs] = edges[i].mtime;
+	}
 
 	tasks.push_back(t);
 

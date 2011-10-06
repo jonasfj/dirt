@@ -8,9 +8,12 @@
 
 #include <DRT/Builders/DotDRTBuilder.h>
 #include <DRT/Misc/RandomDRTGenerator.h>
+#include <DRT/Misc/Interval.h>
 
 #include <DRT/Builders/ValidatingDRTBuilder.h>
 #include <DRT/Builders/TeeDRTBuilder.h>
+
+#include <DRT/Verification/WangsUtilizationAlgorithm.h>
 
 #include "config.h"
 
@@ -27,10 +30,13 @@
 // GNU getopt From GLibc
 #include <getopt.h>
 
+using namespace std;
 using namespace DRT;
 using namespace DRT::Misc;
 using namespace DRT::Xml;
 using namespace DRT::Builders;
+using namespace DRT::Matrix;
+using namespace DRT::Verification;
 
 namespace Options{
 	/** Primary options for main() */
@@ -41,9 +47,26 @@ namespace Options{
 		Generate,				///< Generate new DRT
 		Validate,				///< Validate input, write results to output
 		Dot,					///< Dump to dot
-		Verify,					///< Verify scheduability of the DRT
+		Verify					///< Verify scheduability of the DRT
+	};
+	/** Long options, that can only be provided as */
+	enum LongOptions{
+		// Start enum at 255, as chars may be used to create short options
+		TaskLimitsOption = 255,	///< Min/max number of task generated
+		JobLimitsOption,		///< Min/max number of jobs generated
+		EdgeLimitsOption,		///< Min/max number of edges generated
+		SeedOption,				///< Seed for PRNG
+		NumberOfOptions			///< Number of long options
 	};
 }
+
+/** Enumeration of return value from dirt/main() */
+enum ReturnValues{
+	SuccessCode = 0,			///< Operation success, input verified or validated
+	FailureCode,				///< Operation failed, input is not scheduable or invalid
+	ArgumentErrorCode,			///< Argument error
+	InputErrorCode				///< Input parsing error
+};
 
 /** Main method of the application
  * The command line interface allows one primary option with a set of optional options.
@@ -57,21 +80,35 @@ namespace Options{
 int main(int argc, char* argv[]){
 	// Options
 	Options::PrimaryOptions option = Options::NoOption;
-	std::ostream* output = &std::cout;
-	std::istream* input = &std::cin;
+	ostream* output = &cout;
+	istream* input = &cin;
+	// Limits when generating DRTs
+	Interval<int> taskLimits, jobLimits, edgeLimits;
+	// Batchmode, ignore no-fatal errors
+	int batchmode = 0;
+	// Seed for PRNG, 0 of none
+	unsigned int seed = 0;
 
 	// Long options
 	static struct option options[] = {
 		// Option Name		Argument Required		Flag pointer		Value
 		// Primary options
-		{"help",			no_argument,			(int*)&option,		Options::Help		},
-		{"generate",		no_argument,			(int*)&option,		Options::Generate	},
-		{"version",			no_argument,			(int*)&option,		Options::Version	},
-		{"validate",		no_argument,			(int*)&option,		Options::Validate	},
-		{"dot",				no_argument,			(int*)&option,		Options::Dot		},
-		// Optional options
-		{"input",			required_argument,		NULL,				'i'					},
-		{"output",			required_argument,		NULL,				'o'					},
+		{"help",			no_argument,			(int*)&option,		Options::Help				},
+		{"generate",		no_argument,			(int*)&option,		Options::Generate			},
+		{"version",			no_argument,			(int*)&option,		Options::Version			},
+		{"validate",		no_argument,			(int*)&option,		Options::Validate			},
+		{"dot",				no_argument,			(int*)&option,		Options::Dot				},
+		{"verify",			no_argument,			(int*)&option,		Options::Verify				},
+		// I/O options
+		{"input",			required_argument,		NULL,				'i'							},
+		{"output",			required_argument,		NULL,				'o'							},
+		// Meta options
+		{"batch-mode",		no_argument,			&batchmode,			1							},
+		// Generate options
+		{"task-limits",		required_argument,		NULL,				Options::TaskLimitsOption	},
+		{"job-limits",		required_argument,		NULL,				Options::JobLimitsOption	},
+		{"edge-limits",		required_argument,		NULL,				Options::EdgeLimitsOption	},
+		{"seed",			required_argument,		NULL,				Options::SeedOption			},
 		{0, 0, 0, 0}
 	};
 
@@ -91,10 +128,38 @@ int main(int argc, char* argv[]){
 				option = Options::Generate;
 				break;
 			case 'i':
-				input = (std::istream*)new std::ifstream(optarg, std::ifstream::in);
+				input = (istream*)new ifstream(optarg, ifstream::in);
 				break;
 			case 'o':
-				output = (std::ostream*)new std::ofstream(optarg, std::ofstream::out);
+				output = (ostream*)new ofstream(optarg, ofstream::out);
+				break;
+			case Options::TaskLimitsOption:
+				taskLimits = Interval<int>::parse(optarg);
+				if(!taskLimits.valid()){
+					fprintf(stderr, "Can't parse argument: \"%s\" given to --task-limits\n", optarg);
+					if(!batchmode) return ArgumentErrorCode;
+				}
+				break;
+			case Options::JobLimitsOption:
+				jobLimits = Interval<int>::parse(optarg);
+				if(!jobLimits.valid()){
+					fprintf(stderr, "Can't parse argument: \"%s\" given to --job-limits\n", optarg);
+					if(!batchmode) return ArgumentErrorCode;
+				}
+				break;
+			case Options::EdgeLimitsOption:
+				edgeLimits = Interval<int>::parse(optarg);
+				if(!jobLimits.valid()){
+					fprintf(stderr, "Can't parse argument: \"%s\" given to --edge-limits\n", optarg);
+					if(!batchmode) return ArgumentErrorCode;
+				}
+				break;
+			case Options::SeedOption:
+				if(sscanf(optarg, "%d", &seed) != 1){
+					fprintf(stderr, "Can't parse argument: \"%s\" given to --seed\n", optarg);
+					if(!batchmode) return ArgumentErrorCode;
+					seed = 0;
+				}
 				break;
 			default:
 				option = Options::Help;
@@ -105,25 +170,25 @@ int main(int argc, char* argv[]){
 	// Validate arguments
 	if(option == Options::NoOption){
 		printf("Usage: %s [--generate] [--validate] [--help]\n", argv[0]);
-		return 1;
+		return ArgumentErrorCode;
 	}
 
 	// Show version information
 	if(option == Options::Version){
-		printf("Realtiming %s\n"
+		printf("dirt %s\n"
 			   "Copyright (C) 2011 Jonas Finnemann Jensen <jopsen@gmail.com>.\n"
 			   "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
 			   "This is free software: you are free to change and redistribute it.\n"
 			   "There is NO WARRANTY, to the extent permitted by law.\n",
 				PROJECT_VERSION);
-		return 0;
+		return SuccessCode;
 	}
 
 	// Show help
 	if(option == Options::Help){
 		printf("Usage: %s --input [FILE] [--validate] [--help]\n", argv[0]);
 		//TODO Print better help message
-		return 0;
+		return SuccessCode;
 	}
 
 	// Generate a random DRT
@@ -137,11 +202,15 @@ int main(int argc, char* argv[]){
 		b = &tee;
 #endif /* NDEBUG */
 
+		// Create generator
 		RandomDRTGenerator rg;
-		//rg.setJobLimits(1, 5);		//TODO: Allows this to be set using options
-		//rg.setTaskLimits(1,3);
-		//rg.setEdgeLimits(1,6);
-		rg.generate(b);
+		// Set limits if provided
+		if(taskLimits.valid())	rg.setTaskLimits(taskLimits);
+		if(jobLimits.valid())	rg.setJobLimits(jobLimits);
+		if(edgeLimits.valid())	rg.setEdgeLimits(edgeLimits);
+
+		// Generate DRT
+		rg.generate(b, seed);
 	}
 
 	// Validate input
@@ -150,8 +219,9 @@ int main(int argc, char* argv[]){
 		ValidatingDRTBuilder validator(*output);
 		// Parse input
 		XmlDRTParser parser;
-		parser.parse(*input, &validator);
-		return validator.hasError() ? 2 : 0;
+		if(!parser.parse(*input, &validator))
+			return InputErrorCode;
+		return validator.hasError() ? FailureCode : SuccessCode;
 	}
 
 	// Dump to dot
@@ -160,7 +230,23 @@ int main(int argc, char* argv[]){
 		DotDRTBuilder dotter(*output);
 		// Parse input
 		XmlDRTParser parser;
-		bool succ = parser.parse(*input, &dotter);
-		return succ ? 0 : 3;
+		if(!parser.parse(*input, &dotter))
+			return InputErrorCode;
+		return SuccessCode;
+	}
+
+	// Verify
+	if(option == Options::Verify){
+		//TODO: This only computes utilization, verification isn't complete yet!
+
+		//Parse input to matrices
+		MatrixDRTBuilder mb;
+		if(!XmlDRTParser().parse(*input, &mb))
+			return InputErrorCode;
+		vector<MatrixTask*> drt = mb.produce();
+
+		double U = WangsUtilizationAlgorithm::computeUtilization(drt);
+		*output << "Utilization of DRT: " << U << endl;
+		return SuccessCode;
 	}
 }
