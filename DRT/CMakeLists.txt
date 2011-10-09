@@ -8,6 +8,8 @@ set(drt_SOURCES
 		Misc/RandomDRTGenerator.cpp
 		Verification/WangsDBFAlgorithm.cpp
 		Verification/WangsUtilizationAlgorithm.cpp
+		Verification/Lawler.cpp
+		Verification/MBF.cpp
 		Xml/XmlDRTBuilder.cpp
 		Xml/XmlDRTParser.cpp)
 # Add library target, make it a static library

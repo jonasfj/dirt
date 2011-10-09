@@ -14,6 +14,7 @@
 #include <DRT/Builders/TeeDRTBuilder.h>
 
 #include <DRT/Verification/WangsUtilizationAlgorithm.h>
+#include <DRT/Verification/Lawler.h>
 
 #include "config.h"
 
@@ -245,7 +246,8 @@ int main(int argc, char* argv[]){
 			return InputErrorCode;
 		vector<MatrixTask*> drt = mb.produce();
 
-		double U = WangsUtilizationAlgorithm::computeUtilization(drt);
+		//double U = WangsUtilizationAlgorithm::computeUtilization(drt);
+		double U = Lawler::computeUtilization(drt);
 		*output << "Utilization of DRT: " << U << endl;
 		return SuccessCode;
 	}
