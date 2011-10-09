@@ -3,6 +3,9 @@
 set(test_FILES
 		DiscreteDBFInsertTest.cpp
 		DiscreteDBFStepTest.cpp
+		WangUtilizationTest.cpp
+		ParallelDBFTest.cpp
+		SequentialDBFTest.cpp
 	)
 
 # Enable testing

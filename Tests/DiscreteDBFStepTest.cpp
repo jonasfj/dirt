@@ -23,7 +23,7 @@ int main(){
 	CHECK(6 == step->wcet());
 	CHECK(10 == step->time());
 	CHECK(!step->next());
-	CHECK(!step->end());
+	CHECK(step->end());
 	delete step;
 	step = NULL;
 	return 0;

@@ -97,8 +97,10 @@ DiscreteDBF::DiscreteStepIterator::DiscreteStepIterator(const TupleList& tuples)
 
 /** Advance step iterator by one (tuple) */
 bool DiscreteDBF::DiscreteStepIterator::next(){
-	if(_next == _end)
+	if(_next == _end){
+		setTime(INT_MAX);
 		return false;
+	}
 	setWcet(_next->wcet());
 	setTime(_next->time());
 	_next++;

@@ -49,28 +49,34 @@ AbstractDBF::StepIterator* ParallelDBF::steps() const{
 ParallelDBF::ParallelStepIterator::ParallelStepIterator(const DBFList& dbfs)
  : CompositeStepIterator(dbfs){
 	for(size_t i = 0; i < dbfs.size(); i++)
-		prevWcet[i] = 0;
+		prevWcet.push_back(0);
 }
 
 /** Advance parallel step iterator to next step */
 bool ParallelDBF::ParallelStepIterator::next(){
-	int s = -1;
-	// Select stepper with lowest time
+	int t = INT_MAX;
+	// Select time for next step
 	for(size_t i = 0; i < steppers.size(); i++){
-		if(steppers[i]->end()) continue;
-		if(s == -1 || steppers[i]->time() < steppers[s]->time())
-			s = i;
+		if(steppers[i]->time() <= t)
+			t = steppers[i]->time();
 	}
-	if(s == -1){
-		setTime(INT_MAX);
+	// Set selected time
+	setTime(t);
+	if(t == INT_MAX)
 		return false;
+
+	// Add steps with given time, and move to next step
+	for(size_t i = 0; i < steppers.size(); i++){
+		assert(steppers[i]->time() >= t);
+		if(steppers[i]->time() == t){
+			assert(steppers[i]->wcet() > prevWcet[i]);
+			setWcet(wcet() + steppers[i]->wcet() - prevWcet[i]);
+			prevWcet[i] = steppers[i]->wcet();
+			steppers[i]->next();
+		}
 	}
-	assert(steppers[s]->wcet() > prevWcet[s]);
-	setWcet(wcet() + steppers[s]->wcet() - prevWcet[s]);
-	prevWcet[s] = steppers[s]->wcet();
-	setTime(steppers[s]->time());
-	steppers[s]->next();
-	return true;
+	// Return true, if we're not at end
+	return t != INT_MAX;
 }
 
 /** Get demand bound within time for sequential execution of DBFs */
@@ -91,26 +97,29 @@ AbstractDBF::StepIterator* SequentialDBF::steps() const{
 /** Advance sequantial step iterator to next step */
 bool SequentialDBF::SequentialStepIterator::next(){
 	int new_wcet = 0;
-	int new_time = 0;
 	do{
-		int s = -1;
-		// Select stepper with lowest time
+		int t = INT_MAX;
+		// Select next time instance
 		for(size_t i = 0; i < steppers.size(); i++){
-			if(steppers[i]->end()) continue;
-			if(s == -1 || steppers[i]->time() < steppers[s]->time())
-				s = i;
+			if(steppers[i]->time() <= t)
+				t = steppers[i]->time();
 		}
-		if(s == -1){
-			setTime(INT_MAX);
+		// Set selected time
+		setTime(t);
+		if(time() == INT_MAX)
 			return false;
+
+		for(size_t i = 0; i < steppers.size(); i++){
+			assert(steppers[i]->time() >= t);
+			if(steppers[i]->time() == t){
+				if(new_wcet < steppers[i]->wcet())
+					new_wcet = steppers[i]->wcet();
+				steppers[i]->next();
+			}
 		}
-		new_wcet = steppers[s]->wcet();
-		new_time = steppers[s]->time();
-		steppers[s]++;
 	}while(wcet() >= new_wcet);
 	setWcet(new_wcet);
-	setTime(new_time);
-	assert(new_time > 0 && new_wcet > 0);
+	assert(new_wcet > 0);
 	return true;
 }
 
