@@ -9,7 +9,7 @@ namespace DRT{
 namespace Builders{
 
 /** Create instance of DotDRTBuilder with results written to output  */
-DotDRTBuilder::DotDRTBuilder(ostream& output) : out(output) {
+DotDRTBuilder::DotDRTBuilder(std::ostream& output) : out(output) {
 	id = 1;		// Reserve 0 as invalid id
 	out << "digraph DRT{ " << endl;
 	out << "\tnode [fontsize=10];" << endl;
@@ -46,7 +46,7 @@ void DotDRTBuilder::addJob(const JobArgs& args){
 }
 
 /** Get job id for a job of the current task */
-int DotDRTBuilder::getJobId(const string& name) const{
+int DotDRTBuilder::getJobId(const std::string& name) const{
 	for(vector<JobEntry>::const_iterator it = jobs.begin(); it != jobs.end(); it++){
 		if(it->name == name)
 			return it->id;

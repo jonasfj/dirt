@@ -6,7 +6,7 @@ namespace DRT{
 namespace Misc{
 
 /** Create demand bound function plotter, with given plot title, empty string for no title */
-DBFPlotter::DBFPlotter(ostream& output, const string& title)
+DBFPlotter::DBFPlotter(std::ostream& output, const std::string& title)
  : output(output) {
 	output << "set terminal png" 	<< endl
 		   << "set border 3" 		<< endl
@@ -28,7 +28,7 @@ DBFPlotter::~DBFPlotter(){
  * @remarks: Do not modify any added DBFs before finished is called!
  * This method will not read the demand bound function imidiately...
  */
-void DBFPlotter::addDBF(const Verification::AbstractDBF& dbf, const string& title){
+void DBFPlotter::addDBF(const Verification::AbstractDBF& dbf, const std::string& title){
 	if(steppers.size() == 0)
 		output << "plot";
 	else

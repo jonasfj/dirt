@@ -11,7 +11,7 @@ namespace DRT{
 namespace Verification{
 
 /** Compute utilization of a task set */
-double WangsUtilizationAlgorithm::computeUtilization(const std::vector<Matrix::MatrixTask*>& tasks){
+double WangsUtilizationAlgorithm::computeUtilization(const std::vector<MatrixTask*>& tasks){
 	double U = 0;
 	for(std::vector<MatrixTask*>::const_iterator it = tasks.begin(); it != tasks.end(); it++)
 		U += WangsUtilizationAlgorithm().computeUtilization(*it);

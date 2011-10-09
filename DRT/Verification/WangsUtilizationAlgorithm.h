@@ -31,7 +31,7 @@ class WangsUtilizationAlgorithm{
 		std::vector<UtilizationTuple> tuples;
 	};
 public:
-	static double computeUtilization(const std::vector<Matrix::MatrixTask*>& tasks);
+	static double computeUtilization(const std::vector<DRT::Matrix::MatrixTask*>& tasks);
 	double computeUtilization(const Matrix::MatrixTask* task);
 private:
 	double bestUtilization;							///< Best utilization so far (for a loop)

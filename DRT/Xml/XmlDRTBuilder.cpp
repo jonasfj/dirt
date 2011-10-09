@@ -6,12 +6,12 @@ namespace DRT{
 namespace Xml{
 
 /** Create XmlDRTBuilder where XML stream is written to output stream */
-XmlDRTBuilder::XmlDRTBuilder(ostream& output) : out(output) {
+XmlDRTBuilder::XmlDRTBuilder(std::ostream& output) : out(output) {
 	out << "<drt>" << endl;
 }
 
 /** XML escape string */
-string XmlDRTBuilder::escape(const string& text) const{
+std::string XmlDRTBuilder::escape(const std::string& text) const{
 	return text;	//TODO Actually do an escape of the string...
 }
 

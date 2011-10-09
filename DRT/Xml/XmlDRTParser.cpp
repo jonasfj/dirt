@@ -23,7 +23,7 @@ XmlDRTParser::~XmlDRTParser(){}
 /** Parse XML string to DRT-builder
  * @remarks Well formed XML is assumed, that is the order of tags actually matters!
  */
-bool XmlDRTParser::parse(istream& data, AbstractDRTBuilder* builder) const {
+bool XmlDRTParser::parse(std::istream& data, AbstractDRTBuilder* builder) const {
 	stringstream buffer;
 	buffer << data.rdbuf();
 	return parse(buffer.str(), builder);
@@ -32,7 +32,7 @@ bool XmlDRTParser::parse(istream& data, AbstractDRTBuilder* builder) const {
 /** Parse XML string to DRT-builder
  * @remarks Well formed XML is assumed, that is the order of tags actually matters!
  */
-bool XmlDRTParser::parse(const string& xml, AbstractDRTBuilder* builder) const {
+bool XmlDRTParser::parse(const std::string& xml, AbstractDRTBuilder* builder) const {
 	// Parse the Xml string
 	DOMElement* root = DOMElement::loadXML(xml);
 	assert(root);
