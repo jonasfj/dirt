@@ -11,6 +11,10 @@ set(drt_SOURCES
 		Verification/Lawler.cpp
 		Verification/MBF.cpp
 		Xml/XmlDRTBuilder.cpp
-		Xml/XmlDRTParser.cpp)
+		Xml/XmlDRTParser.cpp
+		Verification/CompositeDBF.cpp
+		Verification/DiscreteDBF.cpp
+		Misc/DBFPlotter.cpp
+	)
 # Add library target, make it a static library
 add_library(drt STATIC ${drt_SOURCES})

@@ -141,7 +141,7 @@ bool WangsUtilizationAlgorithm::UtilizationTupleList::pop(UtilizationTuple& tupl
 
 /** True, if this tuple dominates tuple */
 bool WangsUtilizationAlgorithm::UtilizationTuple::dominates(const UtilizationTuple& tuple) const {
-	return time <= tuple.time && wcet >= tuple.time;
+	return time <= tuple.time && wcet >= tuple.wcet;
 }
 
 } /* Verification */

@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
 
-#TODO: Check that NDEBUG is set in release mode
-
 # Project dirt
 project(dirt)
 
@@ -28,6 +26,7 @@ include_directories("${PROJECT_SOURCE_DIR}")
 # Add subdirectory projects
 add_subdirectory(XMLSP)
 add_subdirectory(DRT)
+add_subdirectory(Tests)
 
 # Add executable target
 add_executable(dirt ${dirt_SOURCES})
