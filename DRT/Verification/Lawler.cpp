@@ -55,7 +55,7 @@ double Lawler::computeUtilization(const MatrixTask* task){
 
 void Lawler::Update_weights(){
 	for(Matrix::MatrixTask::JobId i = 0; i < _task->jobs()-1; i++){//n
-		for(Matrix::MatrixTask::JobId j = 0; j < _task->jobs()-1; i++){//n - n²
+		for(Matrix::MatrixTask::JobId j = 0; j < _task->jobs()-1; j++){//n - n²
 			if(_task->edge(i,j)){ //D: giver segmentfejl
 				_mod_weight[i+ _task->jobs()*j] = _task->wcet(i) - lambda*_task->mtime(i,j); //D: giver segmentfejl
 			}
