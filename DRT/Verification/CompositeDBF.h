@@ -9,7 +9,7 @@ namespace DRT{
 namespace Verification{
 
 /** Abstract base class for on-the-fly composition of demand bound functions */
-class CompositeDBF : public AbstractDBF{
+class CompositeDBF : public virtual AbstractDBF{
 protected:
 	typedef std::vector<const AbstractDBF*> DBFList;
 	typedef DBFList::const_iterator ConstDBFIterator;

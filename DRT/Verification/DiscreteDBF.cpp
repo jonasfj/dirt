@@ -45,12 +45,12 @@ int DiscreteDBF::operator() (int time) const{
 	return 0;
 }
 
-/** Pop some DemandTuple from this function */
-bool DiscreteDBF::pop(DemandTuple& tuple){
-	if(empty()) return false;
-	tuple = _tuples.back();
+/** Pop some DemandTuple from this function, return an invalid DemandTuple if at end */
+DemandTuple DiscreteDBF::pop(){
+	if(empty()) return DemandTuple();
+	DemandTuple tuple = _tuples.back();
 	_tuples.pop_back();
-	return true;
+	return tuple;
 }
 
 /** Get TupleIterator pointing to first element with time >= the given time */

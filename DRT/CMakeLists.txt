@@ -15,6 +15,7 @@ set(drt_SOURCES
 		Verification/CompositeDBF.cpp
 		Verification/DiscreteDBF.cpp
 		Misc/DBFPlotter.cpp
+		Verification/TaskDBF.cpp
 	)
 # Add library target, make it a static library
 add_library(drt STATIC ${drt_SOURCES})

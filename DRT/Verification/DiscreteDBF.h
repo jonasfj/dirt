@@ -34,7 +34,7 @@ public:
 	bool insert(const DemandTuple& tuple);
 	int operator()(int time) const;
 	StepIterator* steps() const;
-	bool pop(DemandTuple& tuple);
+	DemandTuple pop();
 	static DiscreteDBF parallelMerge(const DiscreteDBF& dbf1,
 									  const DiscreteDBF& dbf2);
 	static DiscreteDBF sequentialMerge(const DiscreteDBF& dbf1,
