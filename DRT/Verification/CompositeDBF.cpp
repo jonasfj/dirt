@@ -5,7 +5,15 @@
 namespace DRT{
 namespace Verification{
 
-/** Add demand bound function to composite DBF */
+CompositeDBF::~CompositeDBF(){
+	for(size_t i = 0; i < dbfs.size(); i++)
+		delete dbfs[i];
+	dbfs.clear();
+}
+
+/** Add demand bound function to composite DBF
+ * This will take ownership of DBF, and it will be deleted with the CompositeDBF
+ */
 void CompositeDBF::addDBF(const AbstractDBF* dbf){
 	assert(dbf);
 	dbfs.push_back(dbf);

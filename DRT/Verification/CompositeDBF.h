@@ -24,6 +24,7 @@ protected:
 		StepIterList steppers;		///< StepIterators
 	};
 public:
+	~CompositeDBF();
 	void addDBF(const AbstractDBF* dbf);
 protected:
 	DBFList dbfs;

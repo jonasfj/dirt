@@ -46,6 +46,16 @@ public:
 	 * @remarks StepIterator should be deleted after use.
 	 */
 	virtual StepIterator* steps() const = 0;
+
+	/** True, if this demand bound function can be satisifed by a single processor */
+	bool feasible() const{
+		StepIterator* step = steps();
+		while(step->next()){
+			if(step->wcet() > step->time())
+				return false;
+		}
+		return true;
+	}
 };
 
 

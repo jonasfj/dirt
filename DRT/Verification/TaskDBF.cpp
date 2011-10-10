@@ -1,5 +1,7 @@
 #include "TaskDBF.h"
 
+#include <math.h>
+
 using namespace DRT::Matrix;
 
 namespace DRT{
@@ -10,6 +12,13 @@ TaskDBF::TaskDBF(const Matrix::MatrixTask* task, int time)
 	 compute(time);
 }
 
+TaskDBF::~TaskDBF(){
+	// Delete waitinglists, note tupleLists are owned by underlying SequentialDBF
+	for(size_t i = 0; i < waitingLists.size(); i++)
+		delete waitingLists[i];
+	waitingLists.clear();
+}
+
 void TaskDBF::compute(int time){
 	// Create initial demand tuples for each job
 	for(MatrixTask::JobId j = 0; j < task.jobs(); j++){
@@ -18,10 +27,10 @@ void TaskDBF::compute(int time){
 		waiting.insert(dt);
 		tuples.insert(dt);
 		// Insert them in the tuple and waiting list lists
-		tupleLists.push_back(tuples);
-		waitingLists.push_back(waiting);
+		tupleLists.push_back(new DiscreteDBF(tuples));
+		waitingLists.push_back(new DiscreteDBF(waiting));
 		// Add tuple lists to underlying SequentialDBF
-		SequentialDBF::addDBF(&tupleLists[j]);
+		SequentialDBF::addDBF(tupleLists[j]);
 	}
 	assert(tupleLists.size() == task.jobs());
 	assert(waitingLists.size() == task.jobs());
@@ -46,7 +55,7 @@ bool TaskDBF::expandTuples(Matrix::MatrixTask::JobId job, int time){
 	bool created_new = false;
 	const int job_deadline = task.deadline(job);
 	DemandTuple tuple;
-	while((tuple = waitingLists[job].pop()).valid()){
+	while((tuple = waitingLists[job]->pop()).valid()){
 		for(MatrixTask::JobId j = 0; j < task.jobs(); j++){
 			int mtime = task.mtime(job, j);
 			if(mtime != INT_MAX){
@@ -55,12 +64,32 @@ bool TaskDBF::expandTuples(Matrix::MatrixTask::JobId job, int time){
 				if(ntime > time)
 					continue;
 				DemandTuple n(nwcet, ntime);
-				if(tupleLists[j].insert(n))
-					created_new |= waitingLists[j].insert(n);
+				if(tupleLists[j]->insert(n))
+					created_new |= waitingLists[j]->insert(n);
 			}
 		}
 	}
 	return created_new;
+}
+
+/** Create DemandBoundFunction for DRT tasks */
+AbstractDBF* TaskDBF::DRTDemandBoundFunction(const std::vector<Matrix::MatrixTask*>& tasks, int time){
+	typedef std::vector<Matrix::MatrixTask*>::const_iterator ConstTaskIter;
+	ParallelDBF* dbf = new ParallelDBF();
+	for(ConstTaskIter it = tasks.begin(); it != tasks.end(); it++)
+		dbf->addDBF(new TaskDBF(*it, time));
+	return dbf;
+}
+
+/** Find upper bound on demand bound function for tasks system given utilization */
+int TaskDBF::DBFBound(const std::vector<Matrix::MatrixTask*>& tasks, double utilization){
+	typedef std::vector<Matrix::MatrixTask*>::const_iterator ConstTaskIter;
+	int wcet = 0;		//wcet for all jobs in all tasks
+	for(ConstTaskIter it = tasks.begin(); it != tasks.end(); it++){
+		for(size_t i = 0; i < (*it)->jobs(); i++)
+			wcet += (*it)->wcet(i);
+	}
+	return ceil(wcet / (1 - utilization));
 }
 
 } /* Verification */

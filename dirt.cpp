@@ -9,12 +9,15 @@
 #include <DRT/Builders/DotDRTBuilder.h>
 #include <DRT/Misc/RandomDRTGenerator.h>
 #include <DRT/Misc/Interval.h>
+#include <DRT/Misc/DBFPlotter.h>
 
 #include <DRT/Builders/ValidatingDRTBuilder.h>
 #include <DRT/Builders/TeeDRTBuilder.h>
 
 #include <DRT/Verification/WangsUtilizationAlgorithm.h>
 #include <DRT/Verification/Lawler.h>
+
+#include <DRT/Verification/TaskDBF.h>
 
 #include "config.h"
 
@@ -83,12 +86,10 @@ int main(int argc, char* argv[]){
 	Options::PrimaryOptions option = Options::NoOption;
 	ostream* output = &cout;
 	istream* input = &cin;
-	// Limits when generating DRTs
-	Interval<int> taskLimits, jobLimits, edgeLimits;
-	// Batchmode, ignore no-fatal errors
-	int batchmode = 0;
-	// Seed for PRNG, 0 of none
-	unsigned int seed = 0;
+	Interval<int> taskLimits, jobLimits, edgeLimits;	// Limits when generating DRTs
+	int batchmode = 0;									// Batchmode, ignore no-fatal errors
+	unsigned int seed = 0;								// Seed for PRNG, 0 of none
+	int plot = 0;										// Plot DBF when verifying
 
 	// Long options
 	static struct option options[] = {
@@ -105,6 +106,7 @@ int main(int argc, char* argv[]){
 		{"output",			required_argument,		NULL,				'o'							},
 		// Meta options
 		{"batch-mode",		no_argument,			&batchmode,			1							},
+		{"plot",			no_argument,			&plot,				1							},
 		// Generate options
 		{"task-limits",		required_argument,		NULL,				Options::TaskLimitsOption	},
 		{"job-limits",		required_argument,		NULL,				Options::JobLimitsOption	},
@@ -246,9 +248,25 @@ int main(int argc, char* argv[]){
 			return InputErrorCode;
 		vector<MatrixTask*> drt = mb.produce();
 
-		//double U = WangsUtilizationAlgorithm::computeUtilization(drt);
-		double U = Lawler::computeUtilization(drt);
-		*output << "Utilization of DRT: " << U << endl;
-		return SuccessCode;
+		double U = WangsUtilizationAlgorithm::computeUtilization(drt);
+		//double U = Lawler::computeUtilization(drt);
+		int D = TaskDBF::DBFBound(drt, U);
+		AbstractDBF* dbf = TaskDBF::DRTDemandBoundFunction(drt, D);
+		bool scheduable = dbf->feasible();
+
+		if(!plot){
+			*output << "Utilization of DRT: " << U << endl;
+			*output << "Upper bound of DBF: " << D << endl;
+			if(scheduable)
+				*output << "DRT is schedulable" << endl;
+			else
+				*output << "DRT is NOT schedulable!" << endl;
+		}else{
+			DBFPlotter plotter(*output, "DRT Demand Bound Function");
+			plotter.addDBF(*dbf);
+			plotter.finish();
+		}
+
+		return scheduable ? SuccessCode : FailureCode;
 	}
 }
