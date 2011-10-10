@@ -5,8 +5,8 @@ using namespace std;
 namespace DRT{
 namespace Misc{
 
-/** Create demand bound function plotter, with given plot title, empty string for no title */
-DBFPlotter::DBFPlotter(std::ostream& output, const std::string& title)
+/** Create demand bound function plotter, with given time bound and plot title, empty string for no title */
+DBFPlotter::DBFPlotter(std::ostream& output, const std::string& title, int timeBound)
  : output(output) {
 	output << "set terminal png" 	<< endl
 		   << "set border 3" 		<< endl
@@ -14,6 +14,7 @@ DBFPlotter::DBFPlotter(std::ostream& output, const std::string& title)
 		   << "set ytic 1 nomirror" << endl;
 	if(!title.empty())
 		output << "set title \"" << title << "\"" << endl;		//TODO: Escape " to \"
+	_timeBound = timeBound;
 }
 
 /** Release resources held by DBFPlotter */
@@ -46,9 +47,13 @@ void DBFPlotter::addDBF(const Verification::AbstractDBF& dbf, const std::string&
 void DBFPlotter::finish(){
 	output << endl;
 	for(size_t i = 0; i < steppers.size(); i++){
+		int last_time = 0;
 		do{
+			last_time = steppers[i]->time();
 			output << " " << steppers[i]->time() << ", " << steppers[i]->wcet() << endl;
-		}while(steppers[i]->next());
+		}while(steppers[i]->next() && steppers[i]->time() <= _timeBound);
+		if(last_time < _timeBound && _timeBound != INT_MAX)
+			output << " " << _timeBound << ", " << steppers[i]->wcet() << endl;
 		output << " e" << endl;
 		delete steppers[i];
 	}

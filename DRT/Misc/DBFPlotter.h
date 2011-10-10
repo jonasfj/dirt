@@ -15,13 +15,14 @@ namespace Misc{
 class DBFPlotter{
 	typedef std::vector<Verification::AbstractDBF::StepIterator*> StepIterList;
 public:
-	DBFPlotter(std::ostream& output, const std::string& title = "");
+	DBFPlotter(std::ostream& output, const std::string& title = "", int timeBound = INT_MAX);
 	~DBFPlotter();
 	void addDBF(const Verification::AbstractDBF& dbf, const std::string& title = "");
 	void finish();
 private:
+	int _timeBound;					///< Time bound
 	std::string _title;				///< Title of plots produced with this class
-	std::ostream& output;				///< Output stream to write data to
+	std::ostream& output;			///< Output stream to write data to
 	StepIterList steppers;			///< StepIterators to output
 };
 

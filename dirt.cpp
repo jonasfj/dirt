@@ -262,7 +262,7 @@ int main(int argc, char* argv[]){
 			else
 				*output << "DRT is NOT schedulable!" << endl;
 		}else{
-			DBFPlotter plotter(*output, "DRT Demand Bound Function");
+			DBFPlotter plotter(*output, "DRT Demand Bound Function", D);
 			plotter.addDBF(*dbf);
 			plotter.finish();
 		}
