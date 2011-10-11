@@ -1,6 +1,7 @@
 #include "DiscreteDBF.h"
 
 #include <assert.h>
+#include <stdio.h>
 
 namespace DRT{
 namespace Verification{
@@ -62,25 +63,33 @@ DiscreteDBF::TupleIterator DiscreteDBF::search(int time) {
 	while(start < end){
 		mid = start + (std::distance(start, end) / 2);	//Note: Integer division will always floor
 		if(mid->time() > time)
-			end = mid-1;
+			end = mid;
 		else if(mid->time() < time)
 			start = mid+1;
 		else
 			return mid;
 	}
+#ifndef NDEBUG
+	if(start != end){
+		fprintf(stderr, "Binary search error in DiscreteDBF::search(), info:\n");
+		fprintf(stderr, "size: %d, searching for %d in:\n", _tuples.size(), time);
+		for(TupleIterator i = _tuples.begin(); i != _tuples.end(); i++)
+			fprintf(stderr, "\t%d\n", i->time());
+		fprintf(stderr, "start: %d\n", std::distance(_tuples.begin(), start));
+		fprintf(stderr, "end:   %d\n", std::distance(_tuples.begin(), end));
+	}
+#endif
 	assert(start == end);
 	// Check if start->time() < time, if so add 1
 	if(start != _tuples.end() && start->time() < time)
 		return start + 1;
 	return start;
-/*
 	//Alternative stupid implementation
-	for(TupleIterator it = _tuples.begin(); it != _tuples.end(); it++){
+/*	for(TupleIterator it = _tuples.begin(); it != _tuples.end(); it++){
 		if(it->time() >= time)
 			return it;
 	}
-	return _tuples.end();
-*/
+	return _tuples.end();*/
 }
 
 

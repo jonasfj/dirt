@@ -8,19 +8,20 @@ using namespace DRT::Verification;
 
 /** Test if SequentialDBF works */
 int main(){
-	DiscreteDBF dbf1, dbf2;
+	DiscreteDBF* dbf1 = new DiscreteDBF();
+	DiscreteDBF* dbf2 = new DiscreteDBF();
 
-	CHECK(dbf1.insert(DemandTuple(1, 5)));
-	CHECK(dbf1.insert(DemandTuple(2, 10)));
-	CHECK(dbf1.insert(DemandTuple(3, 15)));
+	CHECK(dbf1->insert(DemandTuple(1, 5)));
+	CHECK(dbf1->insert(DemandTuple(2, 10)));
+	CHECK(dbf1->insert(DemandTuple(3, 15)));
 
-	CHECK(dbf2.insert(DemandTuple(1, 6)));
-	CHECK(dbf2.insert(DemandTuple(2, 9)));
-	CHECK(dbf2.insert(DemandTuple(3, 15)));
+	CHECK(dbf2->insert(DemandTuple(1, 6)));
+	CHECK(dbf2->insert(DemandTuple(2, 9)));
+	CHECK(dbf2->insert(DemandTuple(3, 15)));
 
 	SequentialDBF sdbf;
-	sdbf.addDBF(&dbf1);
-	sdbf.addDBF(&dbf2);
+	sdbf.addDBF(dbf1);
+	sdbf.addDBF(dbf2);
 
 	AbstractDBF::StepIterator* step = sdbf.steps();
 
