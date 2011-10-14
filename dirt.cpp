@@ -247,8 +247,14 @@ int main(int argc, char* argv[]){
 		if(!XmlDRTParser().parse(*input, &mb))
 			return InputErrorCode;
 		vector<MatrixTask*> drt = mb.produce();
-
+		
 		double U = WangsUtilizationAlgorithm::computeUtilization(drt);
+		if(U >= 1) {
+			*output << "Utilization of DRT: " << U << endl;
+			*output << "DRT is NOT schedulable!" << endl;
+			return FailureCode;
+		}
+			
 		//double U = Lawler::computeUtilization(drt);
 		int D = TaskDBF::DBFBound(drt, U);
 		AbstractDBF* dbf = TaskDBF::DRTDemandBoundFunction(drt, D);
