@@ -295,6 +295,12 @@ int main(int argc, char* argv[]){
 			
 		//double U = Lawler::computeUtilization(drt);
 		int D = TaskDBF::DBFBound(drt, U);
+
+		if(!plot){
+			*output << "Utilization of DRT: " << U << endl;
+			*output << "Upper bound of DBF: " << D << endl;
+		}
+
 		AbstractDBF* dbf = TaskDBF::DRTDemandBoundFunction(drt, D);
 		bool scheduable = dbf->feasible();
 
