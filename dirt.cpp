@@ -25,6 +25,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 // Standard C++ Libraries
 #include <fstream>
@@ -59,6 +60,9 @@ namespace Options{
 		TaskLimitsOption = 255,	///< Min/max number of task generated
 		JobLimitsOption,		///< Min/max number of jobs generated
 		EdgeLimitsOption,		///< Min/max number of edges generated
+		DelayLimitsOption,		///< Min/max inter-release time of generated edges
+		WcetLimitsOption,		///< Min/max worst case execution time of generated jobs
+		SlackLimitsOption,		///< Min/max slack for deadline of generated jobs
 		SeedOption,				///< Seed for PRNG
 		NumberOfOptions			///< Number of long options
 	};
@@ -86,9 +90,11 @@ int main(int argc, char* argv[]){
 	Options::PrimaryOptions option = Options::NoOption;
 	ostream* output = &cout;
 	istream* input = &cin;
-	Interval<int> taskLimits, jobLimits, edgeLimits;	// Limits when generating DRTs
+	Interval<int> taskLimits, jobLimits, edgeLimits,	// Limits when generating DRTs
+				  delayLimits, wcetLimits, slackLimits;
 	int batchmode = 0;									// Batchmode, ignore no-fatal errors
 	unsigned int seed = 0;								// Seed for PRNG, 0 of none
+	int seed_time = 0;									// Seed with time too
 	int plot = 0;										// Plot DBF when verifying
 
 	// Long options
@@ -111,7 +117,11 @@ int main(int argc, char* argv[]){
 		{"task-limits",		required_argument,		NULL,				Options::TaskLimitsOption	},
 		{"job-limits",		required_argument,		NULL,				Options::JobLimitsOption	},
 		{"edge-limits",		required_argument,		NULL,				Options::EdgeLimitsOption	},
+		{"delay-limits",	required_argument,		NULL,				Options::DelayLimitsOption	},
+		{"wcet-limits",		required_argument,		NULL,				Options::WcetLimitsOption	},
+		{"slack-limits",	required_argument,		NULL,				Options::SlackLimitsOption	},
 		{"seed",			required_argument,		NULL,				Options::SeedOption			},
+		{"seed-time",		no_argument,			&seed_time,			1							},
 		{0, 0, 0, 0}
 	};
 
@@ -152,8 +162,29 @@ int main(int argc, char* argv[]){
 				break;
 			case Options::EdgeLimitsOption:
 				edgeLimits = Interval<int>::parse(optarg);
-				if(!jobLimits.valid()){
+				if(!edgeLimits.valid()){
 					fprintf(stderr, "Can't parse argument: \"%s\" given to --edge-limits\n", optarg);
+					if(!batchmode) return ArgumentErrorCode;
+				}
+				break;
+			case Options::DelayLimitsOption:
+				delayLimits = Interval<int>::parse(optarg);
+				if(!delayLimits.valid()){
+					fprintf(stderr, "Can't parse argument: \"%s\" given to --delay-limits\n", optarg);
+					if(!batchmode) return ArgumentErrorCode;
+				}
+				break;
+			case Options::WcetLimitsOption:
+				wcetLimits = Interval<int>::parse(optarg);
+				if(!wcetLimits.valid()){
+					fprintf(stderr, "Can't parse argument: \"%s\" given to --wcet-limits\n", optarg);
+					if(!batchmode) return ArgumentErrorCode;
+				}
+				break;
+			case Options::SlackLimitsOption:
+				slackLimits = Interval<int>::parse(optarg);
+				if(!slackLimits.valid()){
+					fprintf(stderr, "Can't parse argument: \"%s\" given to --slack-limits\n", optarg);
 					if(!batchmode) return ArgumentErrorCode;
 				}
 				break;
@@ -211,6 +242,13 @@ int main(int argc, char* argv[]){
 		if(taskLimits.valid())	rg.setTaskLimits(taskLimits);
 		if(jobLimits.valid())	rg.setJobLimits(jobLimits);
 		if(edgeLimits.valid())	rg.setEdgeLimits(edgeLimits);
+		if(delayLimits.valid())	rg.setDelayLimits(delayLimits);
+		if(wcetLimits.valid())	rg.setWCETLimits(wcetLimits);
+		if(slackLimits.valid())	rg.setSlackLimits(slackLimits);
+
+		// If we're supposed to seed with time too
+		if(seed_time)
+			seed += time(NULL);
 
 		// Generate DRT
 		rg.generate(b, seed);
