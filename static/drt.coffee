@@ -1,0 +1,149 @@
+# Ensure that object this.drt exists, as we'll add to this namespace
+@drt ?= {}
+
+log = (msg) -> if console? and console.log? then console.log(msg) else alert(msg)
+
+# Representation of a task
+class @drt.Task
+	constructor: (@name) ->
+	_delay: []
+	jobs: []
+	delay: (source, target) =>
+		# Identify if objects
+		source = source.id if typeof source is "object"
+		target = target.id if typeof target is "object"
+		return @_delay[source + @jobs.length * target]
+	edge:  (source, target) =>
+		return @delay(source, target) != -1
+	addJob: (job) =>
+		o_d = @_delay
+		o_l = @jobs.length
+		job.id = @jobs.length
+		@jobs[job.id] = job
+		@_delay = []
+		for i in [0..@jobs.length-1]
+			for j in [0..@jobs.length-1]
+				@_delay[i + @jobs.length * j] = -1
+		for i in [0..o_l-1]
+			for j in [0..o_l-1]
+				@_delay[i + @jobs.length * j] = o_d[i + o_l * j]
+		return
+	addEdge: (source, target, delay) =>
+		# Identify if objects
+		source = source.id if typeof source is "object"
+		target = target.id if typeof target is "object"
+		# Set the delay
+		@_delay[source + @jobs.length * target] = delay
+		# Maintain preset and postset
+		@jobs[source].postset.push(@jobs[target]) unless @jobs[target] in @jobs[source].postset
+		@jobs[target].preset.push(@jobs[source]) unless @jobs[source] in @jobs[target].preset
+		return
+	removeEdge: (source, target) =>
+		@addEdge(source, target, -1)
+		return
+	job: (id) => return @jobs[id]
+	id: (name) =>
+		for job in @jobs
+			return job.id if job.name == name
+		return -1
+
+# Representation of a job
+class @drt.Job
+	@Types = {Job: {}, Fork: {}, Merge: {}}
+	constructor: (@name, @wcet, @deadline, @type = Job.Types.Job, @id = -1) ->
+		@preset = []
+		@postset = []
+
+# Parse Xml using jquery
+@drt.parseXml = (xml) ->
+	tasks = []
+	xml = jQuery.parseXML(xml)
+	$(xml).find("drt").each ->
+		$(this).find("task").each ->
+			task = new drt.Task($(this).attr("name"))
+			$(this).find("job").each ->
+				id = task.jobs.length
+				task.jobs[id] = new drt.Job($(this).attr("name"),
+											 $(this).attr("wcet"),
+											 $(this).attr("deadline"),
+											 drt.Job.Types.Job, id)	#TODO: Different job types
+			for i in [0..task.jobs.length-1]
+				task._delay[i + task.jobs.length * j] = -1 for j in [0..task.jobs.length-1]
+			$(this).find("edge").each ->
+				task.addEdge(task.id($(this).attr("source")),
+							 task.id($(this).attr("destination")),
+							 $(this).attr("delay"))
+			tasks.push(task)
+	return tasks
+
+@drt.validate = (task, output = log) ->
+	retval = true
+	assert = (cond, msg) =>
+		unless cond
+			output "validation-error: #{msg}"
+			retval = false
+	# Check that names are unique
+	names = []
+	for job in task.jobs
+		if job.name in names
+			assert false, "Job name: \"#{job.name}\" is not unique in task: #{task.name}"
+		else
+			names.push(job.name)
+	# Validate preset/postset
+	for source in task.jobs
+		for target in task.jobs
+			if task.edge(source, target)
+				assert source in target.preset, "#{source.name} not in preset of #{target.name}"
+				assert target in source.postset, "#{target.name} not in postset of #{source.name}"
+			if source in target.preset
+				assert task.edge(source, target), "#{source.name} is in preset of #{target.name}"
+			if target in source.postset
+				assert task.edge(source, target), "#{target.name} is in postset of #{source.name}"
+	# Verify frame separation property
+	for source in task.jobs
+		for target in source.postset
+			assert task.delay(source, target) >= source.deadline,
+				"frame separation property violation from #{source.name} to #{target.name}"
+	# Compute parents
+	P = []
+	P[j.id] = new drt.Set() for j in task.jobs			#Initially empty
+	for f in task.jobs when f.type is Job.Types.Fork
+		P[j.id].add([f.id, j.id]) for j in f.postset	#Trivial rule
+	for i in [0..task.jobs.length]
+		# Jobs propogate to jobs and forks
+		for v in task.jobs when j.type is Job.Types.Job and P[j.id].length > 0
+			for u in v.postset when y.type isnt Job.Types.Merge and not P[u.id].subset(P[j.id])
+				P[u] = P[u].union(P[j.id])
+		#TODO: merges takes from jobs and forks...
+	#TODO: Verify the parallel isolation property
+	return retval
+
+# Set of tuples
+class drt.Set
+	constructor (@elements = []) ->
+	subset: (set) =>
+		return false if set.elements.length > @elements.length
+		for e in @elements
+			return false unless set.contains(e)
+		return true
+	union: (set) =>
+		u = []
+		for e in @elements
+			u.push(e)
+		for e in set.elements
+			u.push(e) unless @contains(e)
+		return Set(u)
+	contains: (element) =>
+		for e in @elements when e.length == element.length
+			retval = true
+			for i in [0..e.length]
+				if e[i] isnt element[i]
+					retval = false
+					break
+			return true if retval
+		return false
+	add: (element) =>
+		@elements.push(Object.freeze(element)) unless @contains(element)
+
+
+

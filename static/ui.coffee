@@ -1,0 +1,77 @@
+@dirt ?= {}
+
+@dirt.main = =>
+	$("#add-job").button()
+	$("#add-edge").button()
+	$("#open").button()
+	$("#mode").buttonset()
+
+	$(".widget").addClass("no-select")
+
+	# Initial jsPlumb canvas
+	jsPlumb.ready ->
+		# Set container for the document
+		jsPlumb.Defaults.Container = $("#document")
+
+		# Create add job action
+		$("#add-job").click ->
+			job = document.createElement("div")
+			$(job).addClass("job")
+			$("#document").append(job)
+			jsPlumb.addEndpoint(job)
+
+	# Make sure we clean up after jsPlumb
+	$(window).unload -> jsPlumb.unload()
+
+	# Open file when file dialog file is changed
+	#$("#file-dialog-file").change(@dirt.loadInput)
+	document.getElementById("file-dialog-file").addEventListener("change", @dirt.readFile, false)
+
+	# Dialog stuff open file
+	$("#open").click =>
+		@dirt.loadXml """
+					<drt>
+						<task name="task0">
+							<job name="v1" wcet="2" deadline="3"/>
+							<job name="v2" wcet="2" deadline="5"/>
+							<job name="v3" wcet="3" deadline="4"/>
+							<edge source="v1" destination="v2" delay="4"/>
+							<edge source="v2" destination="v3" delay="5"/>
+							<edge source="v3" destination="v1" delay="6"/>
+						</task>
+					</drt>
+				"""
+		return false
+		unless window.File and window.FileReader and window.FileList
+			alert("Browser support lacking")
+			return
+		$("#file-dialog").dialog
+								modal: true
+								resizable: false
+								closeText: "cancel"
+								draggable: false
+
+# Read file
+@dirt.readFile = =>
+	# HTML5, FileReader document at: http://www.html5rocks.com/en/tutorials/file/dndfiles/
+	files = document.getElementById("file-dialog-file").files
+	if files.length > 0
+		reader = new window.FileReader()
+		reader.onloadend = (args) =>
+			if(args.target.readyState == FileReader.DONE)
+				@dirt.loadXml(args.target.result)
+		reader.readAsText(files[0])
+		$("#file-dialog").dialog("close")
+
+@dirt.loadXml = (xml) =>
+	tasks = @drt.parseXml(xml)
+	errors = false
+	for task in tasks
+		unless @drt.validate(task, (msg) => $("#error-log").append("#{msg}<br/>"))
+			alert("Error in task: #{task.name}")
+			errors = true
+	unless errors
+		alert("We've validated #{tasks.length} tasks")
+	#TODO Load the DRT into the editor!!!
+
+
