@@ -52,8 +52,8 @@
 	jsPlumb.Defaults.MaxConnections = -1
 	jsPlumb.Defaults.PaintStyle = strokeStyle: "gray", lineWidth: 2
 	jsPlumb.Defaults.Overlays = [
-		["Arrow", { location: 0.25}],
-		["Arrow", { location: 0.75}],
+		["Arrow", { width:10,length:6, location: 0.25}],
+		["Arrow", { width:10,length:6, location: 0.75}],
 		["Label", { location: 0.5, label: (connInfo) -> return connInfo.connection.labelText || "" , 
 		cssClass:"label"}]
 	]
@@ -72,7 +72,7 @@
 			if (count > 1)
 				src.detach(connInfo.connection)
 	# Click handler for adding jobs
-    $("#add-job").click(addJob)
+	$("#add-job").click(dirt.addJob)
 
 @dirt.nextId = 0
 # Adds a new job to the document

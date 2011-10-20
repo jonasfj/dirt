@@ -3,11 +3,17 @@ body{
 	font-family: "Trebuchet MS", "Helvetica", "Arial",  "Verdana", "sans-serif";
 }
 
+#document
+{
+
+}
+
 #document .job{
 	cursor: pointer;
 	width: 32px;
 	height: 32px;
-	background-image: url("images/place.png");
+	background:url('images/place.png') no-repeat;
+	z-index:20; position:absolute;
 }
 .no-select{
 	-webkit-user-select: none;
@@ -16,3 +22,6 @@ body{
 	-o-user-select: none;
 	user-select: none;
 }
+
+._jsPlumb_connector { z-index:4; }
+._jsPlumb_endpoint { z-index:21;cursor:pointer; }

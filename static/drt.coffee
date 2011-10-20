@@ -120,7 +120,7 @@ class @drt.Job
 
 # Set of tuples
 class drt.Set
-	constructor (@elements = []) ->
+	constructor: (@elements = []) ->
 	subset: (set) =>
 		return false if set.elements.length > @elements.length
 		for e in @elements
