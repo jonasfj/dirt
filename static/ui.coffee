@@ -80,7 +80,7 @@
 	# Click handler for adding jobs
 	$("#add-job").click -> 
 		dirt.adding = true
-		$(this).disable()
+
 	# TODO: pass correct 'type' to addJob()
 	$("#document").click ->
 		if dirt.adding
@@ -90,7 +90,7 @@
 @dirt.mouseX = 0
 @dirt.mouseY = 0
 # bool whether job is being added
-@dirt.adding=false
+@dirt.adding = false
 @dirt.nextId = 0
 @dirt.getNextId = ->
 	id = dirt.nextId
@@ -110,7 +110,6 @@
 	ep = jsPlumb.addEndpoint(job, { anchor: "Center", isSource: true, isTarget: true })
 	$(job).data("endpoint", ep)
 	jsPlumb.draggable(job.id)
-
 
 # Read file
 @dirt.readFile = =>
