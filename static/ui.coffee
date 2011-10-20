@@ -1,7 +1,8 @@
 @dirt ?= {}
 
 @dirt.main = =>
-	$("#add-job").button()
+	# $("#add-job").button()
+	$("#jobs").buttonset()
 	$("#add-edge").button()
 	$("#open").button()
 	$("#mode").buttonset()
@@ -23,9 +24,9 @@
 		@dirt.loadXml """
 					<drt>
 						<task name="task0">
-							<job name="v1" wcet="2" deadline="3"/>
-							<job name="v2" wcet="2" deadline="5"/>
-							<job name="v3" wcet="3" deadline="4"/>
+							<job name="v1" wcet="2" deadline="3" x="200" y="200"/>
+							<job name="v2" wcet="2" deadline="5" x="300" y="200"/>
+							<job name="v3" wcet="3" deadline="4" x="200" y="400"/>
 							<edge source="v1" destination="v2" delay="4"/>
 							<edge source="v2" destination="v3" delay="5"/>
 							<edge source="v3" destination="v1" delay="6"/>
@@ -41,6 +42,7 @@
 								resizable: false
 								closeText: "cancel"
 								draggable: false
+
 # Init JsPlumb stuff
 @dirt.initJsPlumb = ->
 	# Set container for the document
@@ -70,26 +72,43 @@
 
 			if (count > 1)
 				src.detach(connInfo.connection)
+
 	# Click handler for adding jobs
 	$("#add-job").click -> 
-		dirt.addJob("j" + dirt.getNextJobName()) 
+		dirt.adding = true
+
+	# TODO: pass correct 'type' to addJob()
+	$("#document").click (args) ->
+		if dirt.adding
+			dirt.addJob(dirt.getNextJobName(), 0, 1, drt.Job.Types.Job, args.pageX, args.pageY) 
+			dirt.adding = false
+
+# Helper function to dump all properties of an object
+Object::inspect = -> "#{i}: #{k}, " for i, k of @
+
+# bool whether job is being added
+@dirt.adding = false
+
+@dirt.getNextJobName = ->
+	number = 0
+	number = number + 1 while document.getElementById("job_j_#{number}")
+	return "j_#{number}"
 
 # TODO Event handler for modifying/deleting a job (check if new job exists!)
 # TODO Event handler for modifying/deleting an edge
 
-@dirt.getNextJobName = ->
-	number = 0
-	number = number + 1 while document.getElementById("job_" + "j" + number)
-	return number
-
 # Adds a new job to the document
 @dirt.addJob = (name, wcet = 0, deadline = 1, type = drt.Job.Types.Job, x = 0, y = 0) ->
 	#TODO Append wcet, deadline, and draw different background image if type != Job, also set x, y
+	#TODO Also save type on the element somewhere...
 	job = document.createElement("div")
 	job.id = "job_" + name		# TODO Create a function for converting name to id, and use it everywhere
 	job.innerHTML = name
 	$(job).addClass("job")
 	$("#document").append(job)
+	# Not pretty, but it works...
+	$(job).css("left",(x-($(job).width()-10))+"px")
+	$(job).css("top",(y-parseInt($(job).height()*4))+"px")
 	ep = jsPlumb.addEndpoint(job, { anchor: "Center", isSource: true, isTarget: true })
 	$(job).data("endpoint", ep)
 	jsPlumb.draggable(job.id)
@@ -103,6 +122,7 @@
 
 # Create an edge from job named source to job named target with inter-release time delay
 @dirt.addEdge = (source, target, delay) ->
+	# TODO This creates new endpoints, that's bad, so we need a better way
 	conn = jsPlumb.connect({"source": "job_" + source, "target": "job_" + target})
 	conn.delay = "#{delay}"
 	jsPlumb.repaint("job_" + source)
@@ -148,7 +168,6 @@
 		for source in task.jobs
 			for target in task.jobs when task.edge(source, target)
 				dirt.addEdge(source.name, target.name, task.delay(source, target))
-
 
 
 
