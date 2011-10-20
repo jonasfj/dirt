@@ -26,8 +26,7 @@ body{
 	cursor:default;
 }
 
-.label 
-{
+.label{
 	background:white;
 	z-index:22;
 	border:solid 2px gray;
