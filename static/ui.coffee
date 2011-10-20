@@ -9,16 +9,7 @@
 	$(".widget").addClass("no-select")
 
 	# Initial jsPlumb canvas
-	jsPlumb.ready ->
-		# Set container for the document
-		jsPlumb.Defaults.Container = $("#document")
-
-		# Create add job action
-		$("#add-job").click ->
-			job = document.createElement("div")
-			$(job).addClass("job")
-			$("#document").append(job)
-			jsPlumb.addEndpoint(job)
+	jsPlumb.ready(dirt.initJsPlumb)
 
 	# Make sure we clean up after jsPlumb
 	$(window).unload -> jsPlumb.unload()
@@ -50,6 +41,50 @@
 								resizable: false
 								closeText: "cancel"
 								draggable: false
+# Init JsPlumb stuff
+@dirt.initJsPlumb = ->
+	# Set container for the document
+	jsPlumb.Defaults.Container = "document"
+	jsPlumb.Defaults.DragOptions = cursor: "pointer", zIndex: 2000
+	jsPlumb.Defaults.EndpointStyle = radius: 6, fillStyle: "#fff"
+	jsPlumb.Defaults.Endpoint = "Dot"
+	jsPlumb.Defaults.EndpointHoverStyle =  strokeStyle: "#333", fillStyle: "#ccc" 
+	jsPlumb.Defaults.MaxConnections = -1
+	jsPlumb.Defaults.PaintStyle = strokeStyle: "gray", lineWidth: 2
+	jsPlumb.Defaults.Overlays = [
+		["Arrow", { location: 0.25}],
+		["Arrow", { location: 0.75}],
+		["Label", { location: 0.5, label: (connInfo) -> return connInfo.connection.labelText || "" , 
+		cssClass:"label"}]
+	]
+
+	jsPlumb.bind "jsPlumbConnection", (connInfo) -> 
+		src = $("#" + connInfo.sourceId).data("endpoint")
+		end = src = $("#" + connInfo.targetId).data("endpoint")
+		connInfo.connection.labelText = "[0,0]"
+		count = 0
+		for conn in src.connections
+			if (conn.targetId == connInfo.targetId and 
+				conn.sourceId == connInfo.sourceId and 
+				conn isnt connInfo.connection)
+					count = count+1
+
+			if (count > 1)
+				src.detach(connInfo.connection)
+	# Click handler for adding jobs
+    $("#add-job").click(addJob)
+
+@dirt.nextId = 0
+# Adds a new job to the document
+@dirt.addJob = ->
+	job = document.createElement("div")
+	job.id = "j" + dirt.nextId
+	dirt.nextId = dirt.nextId + 1
+	$(job).addClass("job")
+	$("#document").append(job)
+	ep = jsPlumb.addEndpoint(job, { anchor: "Center", isSource: true, isTarget: true })
+	$(job).data("endpoint", ep)
+	jsPlumb.draggable(job.id)
 
 # Read file
 @dirt.readFile = =>
