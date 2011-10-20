@@ -76,6 +76,7 @@ class @drt.Job
 			tasks.push(task)
 	return tasks
 
+# Validate Well-formedness of task and parallel isolation property
 @drt.validate = (task, output = log) ->
 	retval = true
 	assert = (cond, msg) =>
@@ -89,6 +90,7 @@ class @drt.Job
 			assert false, "Job name: \"#{job.name}\" is not unique in task: #{task.name}"
 		else
 			names.push(job.name)
+	# TODO Validate job ids and correct ordering of job ids
 	# Validate preset/postset
 	for source in task.jobs
 		for target in task.jobs
@@ -106,20 +108,29 @@ class @drt.Job
 				"frame separation property violation from #{source.name} to #{target.name}"
 	# Compute parents
 	P = []
-	P[j.id] = new drt.Set() for j in task.jobs			#Initially empty
+	P[j.id] = new Set() for j in task.jobs			#Initially empty
 	for f in task.jobs when f.type is Job.Types.Fork
 		P[j.id].add([f.id, j.id]) for j in f.postset	#Trivial rule
 	for i in [0..task.jobs.length]
 		# Jobs propogate to jobs and forks
-		for v in task.jobs when j.type is Job.Types.Job and P[j.id].length > 0
+		for v in task.jobs when j.type is Job.Types.Job and P[j.id].length() > 0
 			for u in v.postset when y.type isnt Job.Types.Merge and not P[u.id].subset(P[j.id])
 				P[u] = P[u].union(P[j.id])
-		#TODO: merges takes from jobs and forks...
-	#TODO: Verify the parallel isolation property
+		# Merges looks ingoing jobs and forks, adopts their grand parents
+		for m in task.jobs when m.type is Job.Types.Merge
+			forks_handled = []
+			for v in m.preset
+				for [f, u] in P[v.id].elements when not f in forks_handled
+					P[m.id] = P[m.id].union(P[f.id])
+					forks_handled.push(f)
+	# Verify the parallel isolation property
+	for j in task.jobs
+		assert P[j.id].length() <= 1, "#{j.name} is not parallel isolated, it is reachable
+									   from #{f.name for [f, v] in P[j.id].elements}"
 	return retval
 
 # Set of tuples
-class drt.Set
+class Set
 	constructor: (@elements = []) ->
 	subset: (set) =>
 		return false if set.elements.length > @elements.length
@@ -144,6 +155,76 @@ class drt.Set
 		return false
 	add: (element) =>
 		@elements.push(Object.freeze(element)) unless @contains(element)
+	length: => @elements.length
+
+
+# Discrete Demand Bound Function
+class DiscreteDBF
+	constructor: (@dominates, @tuples = []) =>
+		@resort()
+	resort: =>
+		tuples = @tuples
+		@tuples = []
+		insert(tuple) for tuple in tuples
+	insert: (tuple) =>
+		i = @search(tuple.time)			# @tuples[i].time >= tuple.time
+		# Check if tuple is dominated
+		return false if i > 0 and @dominates(@tuples[i-1], tuple)
+		return false if i != @tuples.length and @dominates(@tuples[i], tuple)
+		d = i
+		d = d + 1 while d != @tuples.length and @dominates(tuple, @tuples[d])
+		low = @tuples[0...i]
+		low.push(tuple, @tuples[d...@tuples.length]...)
+		@tuples = low
+		return true
+	search: (time) => 
+		# Find index of first element >= time
+		# TODO Use binary search, see C++ sources
+		for i in [0..@tuples.length] when @tuples[i].time >= time
+			return i
+		return @tuples.length
+	pop: =>
+		# Remove tuple from list
+		return @tuples.pop()
+
+# Compute utilization of a task
+@drt.utilization = (task) ->
+	# Checks for domination
+	dominates = (t1, t2) -> return t1.time =< t2.time and t1.wcet >= t2.wcet
+	# Create tuple list and waiting list for each job
+	wLists = []; tList = []
+	for j in task.jobs
+		wLists.push(new DiscreteDBF(dominates))
+		tLists.push(new DiscreteDBF(dominates))
+	# Create initial tuples
+	for job in task.jobs
+		t = wcet: 0, time: 0, start: job, parent: null
+		wLists[job.id].insert(t)
+		tLists[job.id].insert(t)
+	# Define how we expand tuples
+	U = 0
+	expandTuples = (job) ->
+		gotNews = false
+		while t = wLists[job.id].pop()
+			for j in task.jobs when task.edge(job, j)
+				n =
+					wcet: t.wcet + j.wcet
+					time: t.time + task.delay(job, j)
+					start: t.start
+					parent: t.parent
+				if n.start is j	# Never insert loops
+					if n.wcet / n.time > U
+						U = n.wcet / n.time
+				else if tLists[j.id].insert(n)
+					gotNews |= wLists[j.id].insert(n)
+		return gotNews
+	# Expand tuples till we're done
+	for i in [0...task.jobs.length]
+		gotNews = false
+		for job in task.jobs
+			gotNews |= expandTuples(job)
+		break unless gotNews
+	return U
 
 
 
