@@ -61,7 +61,7 @@
 	jsPlumb.bind "jsPlumbConnection", (connInfo) -> 
 		src = $("#" + connInfo.sourceId).data("endpoint")
 		end = src = $("#" + connInfo.targetId).data("endpoint")
-		connInfo.connection.labelText = "[0,0]"
+		connInfo.connection.labelText = "12"
 		count = 0
 		for conn in src.connections
 			if (conn.targetId == connInfo.targetId and 

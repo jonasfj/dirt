@@ -25,5 +25,13 @@ body{
 	user-select: none;
 }
 
+.label 
+{
+	background:white;
+	z-index:22;
+	border:solid 2px gray;
+	padding:1px;
+}
+
 ._jsPlumb_connector { z-index:4; }
 ._jsPlumb_endpoint { z-index:21;cursor:pointer; }
