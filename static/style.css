@@ -10,10 +10,12 @@ body{
 
 #document .job{
 	cursor: pointer;
-	width: 32px;
-	height: 32px;
-	background:url('images/place.png') no-repeat;
+	min-width: 32px;
+	background: url('images/place.png') no-repeat center;
 	z-index:20; position:absolute;
+	text-align:center;
+	padding-top:42px;
+	/*line-height:80px;*/
 }
 .no-select{
 	-webkit-user-select: none;

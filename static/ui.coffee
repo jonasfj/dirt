@@ -72,14 +72,20 @@
 			if (count > 1)
 				src.detach(connInfo.connection)
 	# Click handler for adding jobs
-	$("#add-job").click(dirt.addJob)
+	$("#add-job").click -> 
+		dirt.addJob("j" + dirt.getNextId(), "", 0, 0) 
 
 @dirt.nextId = 0
-# Adds a new job to the document
-@dirt.addJob = ->
-	job = document.createElement("div")
-	job.id = "j" + dirt.nextId
+@dirt.getNextId = ->
+	id = dirt.nextId
 	dirt.nextId = dirt.nextId + 1
+	return id
+
+# Adds a new job to the document
+@dirt.addJob = (name, type, x, y) ->
+	job = document.createElement("div")
+	job.id = name
+	job.innerHTML = job.id
 	$(job).addClass("job")
 	$("#document").append(job)
 	ep = jsPlumb.addEndpoint(job, { anchor: "Center", isSource: true, isTarget: true })
