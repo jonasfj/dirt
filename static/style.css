@@ -3,11 +3,19 @@ body{
 	font-family: "Trebuchet MS", "Helvetica", "Arial",  "Verdana", "sans-serif";
 }
 
+#document
+{
+
+}
+
 #document .job{
 	cursor: pointer;
-	width: 32px;
-	height: 32px;
-	background-image: url("images/place.png");
+	min-width: 32px;
+	background: url('images/place.png') no-repeat center;
+	z-index:20; position:absolute;
+	text-align:center;
+	padding-top:42px;
+	/*line-height:80px;*/
 }
 .no-select{
 	-webkit-user-select: none;
@@ -15,4 +23,16 @@ body{
 	-moz-user-select: none;
 	-o-user-select: none;
 	user-select: none;
+	cursor:default;
 }
+
+.label 
+{
+	background:white;
+	z-index:22;
+	border:solid 2px gray;
+	padding:1px;
+}
+
+._jsPlumb_connector { z-index:4; }
+._jsPlumb_endpoint { z-index:21;cursor:pointer; }
