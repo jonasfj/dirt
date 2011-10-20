@@ -55,18 +55,17 @@
 		["Arrow", { width:10,length:6, location: 0.25}],
 		["Arrow", { width:10,length:6, location: 0.75}],
 		["Label", { location: 0.5, label: (connInfo) -> return connInfo.connection.labelText || "" , 
-		cssClass:"label"}]
+		cssClass:"label no-select"}]
 	]
 
 	jsPlumb.bind "jsPlumbConnection", (connInfo) -> 
 		src = $("#" + connInfo.sourceId).data("endpoint")
 		end = src = $("#" + connInfo.targetId).data("endpoint")
-		connInfo.connection.labelText = "12"
+		connInfo.connection.labelText = ""+Math.round(Math.random()*100)
 		count = 0
 		for conn in src.connections
 			if (conn.targetId == connInfo.targetId and 
-				conn.sourceId == connInfo.sourceId and 
-				conn isnt connInfo.connection)
+				conn.sourceId == connInfo.sourceId)
 					count = count+1
 
 			if (count > 1)
