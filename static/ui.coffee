@@ -1,7 +1,8 @@
 @dirt ?= {}
 
 @dirt.main = =>
-	$("#add-job").button()
+	# $("#add-job").button()
+	$("#jobs").buttonset()
 	$("#add-edge").button()
 	$("#open").button()
 	$("#mode").buttonset()
@@ -41,6 +42,7 @@
 								resizable: false
 								closeText: "cancel"
 								draggable: false
+
 # Init JsPlumb stuff
 @dirt.initJsPlumb = ->
 	# Set container for the document
@@ -70,10 +72,25 @@
 
 			if (count > 1)
 				src.detach(connInfo.connection)
+	# updates current pos of mouse
+	$(document).mousemove (e) -> 
+		dirt.mouseX = e.pageX;
+		dirt.mouseY = e.pageY;
+
 	# Click handler for adding jobs
 	$("#add-job").click -> 
-		dirt.addJob("j" + dirt.getNextId(), "", 0, 0) 
+		dirt.adding = true
+		$(this).disable()
+	# TODO: pass correct 'type' to addJob()
+	$("#document").click ->
+		if dirt.adding
+			dirt.addJob("j" + dirt.getNextId(), "job", dirt.mouseX, dirt.mouseY) 
+			dirt.adding = false
 
+@dirt.mouseX = 0
+@dirt.mouseY = 0
+# bool whether job is being added
+@dirt.adding=false
 @dirt.nextId = 0
 @dirt.getNextId = ->
 	id = dirt.nextId
@@ -87,9 +104,13 @@
 	job.innerHTML = job.id
 	$(job).addClass("job")
 	$("#document").append(job)
+	# Not pretty, but it works...
+	$(job).css("left",(x-($(job).width()-10))+"px")
+	$(job).css("top",(y-parseInt($(job).height()*4))+"px")
 	ep = jsPlumb.addEndpoint(job, { anchor: "Center", isSource: true, isTarget: true })
 	$(job).data("endpoint", ep)
 	jsPlumb.draggable(job.id)
+
 
 # Read file
 @dirt.readFile = =>
