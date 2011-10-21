@@ -6,8 +6,8 @@ log = (msg) -> if console? and console.log? then console.log(msg) else alert(msg
 # Representation of a task
 class @drt.Task
 	constructor: (@name) ->
-	_delay: []
-	jobs: []
+		@_delay: []
+		@jobs: []
 	delay: (source, target) =>
 		# Identify if objects
 		source = source.id if typeof source is "object"
