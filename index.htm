@@ -1,8 +1,7 @@
 ﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" debug="true"><!-- Remove debug=true before deployment -->
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<meta http-equiv="X-UA-Compatible" content="IE=8" />
 	<title>dirt - untitled.drt</title>
 	<meta name="description" content="A web application for modeling and verification of scheduability in embedded systems using Fork-Merge Digraphs"/>
 	<link rel="stylesheet" type="text/css" href="static/style.css"/>
@@ -34,7 +33,7 @@
 	</span>
 
 	
-	<button id="add-edge">Add Edge</button>
+	<button id="validate">Validate</button>
 	<button id="open">Open file</button>
 	<span id="mode" style="float: right; margin-right: 4px;"> <!-- Fix margin hack!!! -->
 		<input type="radio" name="radio" id="mode-model" checked="checked"/><label for="mode-model">Model</label>
@@ -48,6 +47,23 @@
 <div id="file-dialog" style="display: none;">
 	Select a file to open:<br/><br/>
 	<input type="file" id="file-dialog-file"/>
+</div>
+
+<div id="edge-dialog" style="display: none;">
+	<label for="edge-dialog-delay">Minimum inter-release time:</label>
+	<input name="edge-dialog-delay" id="edge-dialog-delay" type="text" value="0"/>
+</div>
+
+<div id="job-dialog" style="display: none;">
+	<label for="job-dialog-name" for="job-dialog-name">Name:</label>
+	<input name="job-dialog-name" id="job-dialog-name" type="text"/>
+		<br/>
+	<label for="job-dialog-job-type">Type:</label>
+	<select name="job-dialog-job-type" id="job-dialog-job-type">
+			<option>Job</option>
+			<option>Fork</option>
+			<option>Merge</option>
+	</select>
 </div>
 
 <div id="error-dialog" style="display: none;">

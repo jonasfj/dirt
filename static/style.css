@@ -1,10 +1,9 @@
 body{
 	font-size: 75%;
-	font-family: "Trebuchet MS", "Helvetica", "Arial",  "Verdana", "sans-serif";
+	font-family: "Trebuchet MS", "Helvetica", "Arial",  "Verdana", sans-serif;
 }
 
-#document
-{
+#document {
 	width: 100%;
 	height: 100%;
 	position: absolute;
@@ -20,14 +19,20 @@ body{
 	z-index: 20;
 	position: absolute;
 	text-align: center;
-	padding-top: 42px;
-	/*line-height:80px;*/
+	padding-top: 54px;
+	line-height:10px;
 }
+
+#document .fork{ background: url('images/fork.png') no-repeat center; }
+#document .merge{ background: url('images/merge.png') no-repeat center; }
+
+
 .no-select{
 	-webkit-user-select: none;
 	-khtml-user-select: none;
 	-moz-user-select: none;
 	-o-user-select: none;
+	-ie-user-select:none;
 	user-select: none;
 	cursor: default;
 }

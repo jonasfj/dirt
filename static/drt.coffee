@@ -5,9 +5,15 @@ log = (msg) -> if console? and console.log? then console.log(msg) else alert(msg
 
 # Representation of a task
 class @drt.Task
-	constructor: (@name) ->
+	constructor: (@name, jobs = []) ->
 		@_delay = []
 		@jobs = []
+		for job, i in jobs
+			@jobs[i] = job
+			job.id = i
+		for i in [0...@jobs.length]
+			for j in [0...@jobs.length]
+				@_delay[i + @jobs.length * j] = -1
 	delay: (source, target) =>
 		# Identify if objects
 		source = source.id if typeof source is "object"
@@ -15,19 +21,6 @@ class @drt.Task
 		return @_delay[source + @jobs.length * target]
 	edge:  (source, target) =>
 		return @delay(source, target) != -1
-	addJob: (job) =>
-		o_d = @_delay
-		o_l = @jobs.length
-		job.id = @jobs.length
-		@jobs[job.id] = job
-		@_delay = []
-		for i in [0..@jobs.length-1]
-			for j in [0..@jobs.length-1]
-				@_delay[i + @jobs.length * j] = -1
-		for i in [0..o_l-1]
-			for j in [0..o_l-1]
-				@_delay[i + @jobs.length * j] = o_d[i + o_l * j]
-		return
 	addEdge: (source, target, delay) =>
 		# Identify if objects
 		source = source.id if typeof source is "object"
@@ -49,10 +42,11 @@ class @drt.Task
 
 # Representation of a job
 class @drt.Job
-	@Types = {Job: {}, Fork: {}, Merge: {}}
+	@Types = {Job: "job", Fork: "fork", Merge: "merge"}
 	constructor: (@name, @wcet, @deadline, @type = Job.Types.Job, @x = 0, @y = 0, @id = -1) ->
 		@preset = []
 		@postset = []
+		@parent = null
 
 # Parse Xml using jquery
 @drt.parseXml = (xml) ->
@@ -66,7 +60,7 @@ class @drt.Job
 				task.jobs[id] = new drt.Job($(this).attr("name"),
 											 $(this).attr("wcet"),
 											 $(this).attr("deadline"),
-											 drt.Job.Types.Job,	#TODO: Different job types
+											 $(this).attr("type") ? drt.Job.Types.Job,
 											 $(this).attr("x") ? 0,
 											 $(this).attr("y") ? 0,
 											id)
@@ -74,10 +68,55 @@ class @drt.Job
 				task._delay[i + task.jobs.length * j] = -1 for j in [0..task.jobs.length-1]
 			$(this).find("edge").each ->
 				task.addEdge(task.id($(this).attr("source")),
-							 task.id($(this).attr("destination")),
+							 task.id($(this).attr("target")),
 							 $(this).attr("delay"))
 			tasks.push(task)
 	return tasks
+
+# Generate Xml from task
+@drt.writeXml = (tasks) ->
+	xml = "<drt>\n"
+	for task in tasks
+		xml += "\t<task name=\"#{task.name}\">\n"
+		for job in task.jobs
+			xml += "\t\t<job "
+			xml += "name=\"#{job.name}\" "
+			xml += "wcet=\"#{job.wcet}\" "
+			xml += "deadline=\"#{job.deadline}\" "
+			xml += "type=\"#{job.type}\" "
+			xml += "x=\"#{job.x}\" y=\"#{job.y}\"/>\n"
+		for src in task.jobs
+			for dst in task.jobs when task.edge(src, dst)
+				xml += "\t\t<edge source=\"#{src.name}\" target=\"#{dst.name}\" delay=\"#{task.delay(src, dst)}\"/>\n"
+		xml += "\t</task>\n"
+	return xml + "</drt>\n"
+
+# Create a simple tuple
+Tuple = (tuple...) -> return Object.freeze(tuple)
+
+# Compute parents returns true if successful
+@drt.computeParents = (task) ->
+	# Reset all parents
+	bad = false
+	j.parent = null for j in task.jobs
+	for f in task.jobs when f.type is drt.Job.Types.Fork
+		j.parent = Tuple(f, j.id) for j in f.postset
+	for i in [0..task.jobs.length]
+		# Jobs propogate to jobs and forks
+		for j in task.jobs when j.type is drt.Job.Types.Job and j.parent?
+			for u in j.postset when u.type isnt drt.Job.Types.Merge and u.parent isnt j.parent
+				bad = true if u.parent?
+				u.parent = j.parent
+		# Merges looks ingoing jobs and forks, adopts their grand parents
+		for m in task.jobs when m.type is drt.Job.Types.Merge
+			for j in m.preset when j.parent? and j.parent[0].parent? and j.parent[0].parent isnt m.parent
+				bad = true if m.parent?
+				m.parent = j.parent[0].parent
+	unless bad
+		return true
+	else
+		j.parent = null for j in task.jobs	# Reset parents
+		return false
 
 # Validate Well-formedness of task and parallel isolation property
 @drt.validate = (task, output = log) ->
@@ -110,28 +149,25 @@ class @drt.Job
 	for source in task.jobs
 		for target in source.postset
 			assert task.delay(source, target) >= source.deadline,
-				"frame separation property violation from #{source.name} to #{target.name}"
+				"Frame separation property violation from #{source.name} to #{target.name}"
 	# Compute parents
-	P = []
-	P[j.id] = new Set() for j in task.jobs			#Initially empty
+	assert drt.computeParents(task), "Task isn't parallel isolated"
+	# Check trace auxiliary function
+	check_trace = (parent, fork, visited = [])->
+		if not parent?
+			return true
+		if parent[0] == fork or parent in visited
+			return false
+		visited.push(parent)
+		return check_trace(parent[0].parent, fork, visited)
+	# Check trace for all forks
 	for f in task.jobs when f.type is drt.Job.Types.Fork
-		P[j.id].add([f.id, j.id]) for j in f.postset	#Trivial rule
-	for i in [0..task.jobs.length]
-		# Jobs propogate to jobs and forks
-		for v in task.jobs when j.type is drt.Job.Types.Job and P[j.id].length() > 0
-			for u in v.postset when y.type isnt drt.Job.Types.Merge and not P[u.id].subset(P[j.id])
-				P[u] = P[u].union(P[j.id])
-		# Merges looks ingoing jobs and forks, adopts their grand parents
-		for m in task.jobs when m.type is drt.Job.Types.Merge
-			forks_handled = []
-			for v in m.preset
-				for [f, u] in P[v.id].elements when not f in forks_handled
-					P[m.id] = P[m.id].union(P[f.id])
-					forks_handled.push(f)
-	# Verify the parallel isolation property
-	for j in task.jobs
-		assert P[j.id].length() <= 1, "#{j.name} is not parallel isolated, it is reachable
-									   from #{f.name for [f, v] in P[j.id].elements}"
+		assert check_trace(f.parent, f), "Fork #{f.name} can fork itself infinitely"
+	# Check cardinality for all forks and merges
+	for f in task.jobs when f.type is drt.Job.Types.Fork
+		assert f.postset.length == 2, "postset of #{f.name} isn't 2"
+	for m in task.jobs when m.type is drt.Job.Types.Merge
+		assert m.preset.length == 2, "preset of #{m.name} isn't 2"
 	return retval
 
 # Set of tuples
@@ -234,6 +270,5 @@ class DiscreteDBF
 			gotNews |= expandTuples(job)
 		break unless gotNews
 	return U
-
 
 
