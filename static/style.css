@@ -38,10 +38,10 @@ body{
 }
 
 .label{
-	background:white;
-	z-index:22;
-	border:solid 2px gray;
-	padding:1px;
+	background: white;
+	z-index: 22;
+	border: solid 2px gray;
+	padding: 1px;
 }
 
 ._jsPlumb_connector { z-index:4; }

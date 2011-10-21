@@ -26,7 +26,7 @@ class @drt.Task
 		source = source.id if typeof source is "object"
 		target = target.id if typeof target is "object"
 		# Set the delay
-		@_delay[source + @jobs.length * target] = delay
+		@_delay[source + @jobs.length * target] = parseInt(delay)
 		# Maintain preset and postset
 		@jobs[source].postset.push(@jobs[target]) unless @jobs[target] in @jobs[source].postset
 		@jobs[target].preset.push(@jobs[source]) unless @jobs[source] in @jobs[target].preset
@@ -74,7 +74,7 @@ class @drt.Job
 	return tasks
 
 # Generate Xml from task
-@drt.writeXml = (tasks) ->
+@drt.writeXml = (tasks...) ->
 	xml = "<drt>\n"
 	for task in tasks
 		xml += "\t<task name=\"#{task.name}\">\n"

@@ -5,6 +5,7 @@
 	$("#jobs").buttonset()
 	$("#validate").button()
 	$("#open").button()
+	$("#save").button()
 	$("#mode").buttonset()
 
 	$(".widget").addClass("no-select")
@@ -20,20 +21,7 @@
 	document.getElementById("file-dialog-file").addEventListener("change", @dirt.readFile, false)
 
 	# Dialog stuff open file
-	$("#open").click =>
-		@dirt.loadXml """
-					<drt>
-						<task name="task0">
-							<job name="v1" wcet="2" deadline="3" x="200" y="200"/>
-							<job name="v2" wcet="2" deadline="5" x="300" y="200"/>
-							<job name="v3" wcet="3" deadline="4" x="200" y="400"/>
-							<edge source="v1" target="v2" delay="4"/>
-							<edge source="v2" target="v3" delay="5"/>
-							<edge source="v3" target="v1" delay="6"/>
-						</task>
-					</drt>
-				"""
-		return false
+	$("#open").click ->
 		unless window.File and window.FileReader and window.FileList
 			alert("Browser support lacking")
 			return
@@ -42,6 +30,10 @@
 								resizable: false
 								closeText: "cancel"
 								draggable: false
+	$("#save").click ->
+		#TODO Code to detect if the browser supports this, IE obviously have some limits
+		xml = "data:application/drt+xml;base64,#{$.base64Encode(drt.writeXml(dirt.getTask()))}"
+		window.open(xml, "_blank")
 
 # Init JsPlumb stuff
 @dirt.initJsPlumb = ->
@@ -63,8 +55,7 @@
 	jsPlumb.bind "jsPlumbConnection", (connInfo) -> 
 		src = $("#" + connInfo.sourceId).data("endpoint")
 		end = $("#" + connInfo.targetId).data("endpoint")
-		#TODO Provide default delay
-		connInfo.connection.delay = Math.round(Math.random()*100)
+		connInfo.connection.delay = 1
 		count = 0
 		for conn in src.connections
 			if (conn.targetId == connInfo.targetId and 
@@ -78,7 +69,12 @@
 	$("#add-fork").click -> dirt.adding = drt.Job.Types.Fork
 	$("#add-merge").click -> dirt.adding = drt.Job.Types.Merge
 	# Event handler for validation
-	$("#validate").click -> dirt.validate(dirt.getTask())
+	$("#validate").click ->
+		task = dirt.getTask()
+		if dirt.validate(task)
+			$.gritter.add
+						title: "Task validation successfull"
+						text: "Task \"#{task.name}\" was validated and satisfies the parallel isolation property."
 	# Click handler for insering stuff...
 	$("#document").click (args) ->
 		if dirt.adding
@@ -126,12 +122,11 @@ inspect = (d) -> console.log("#{d}\n" + ("#{i}: #{k}, " for i, k of d).join())
 								"Cancel": ->
 									$(this).dialog("close")
 								"Delete": ->
-									alert "deleting!!"
 									jsPlumb.detach(connection.source, connection.target)
 									$(this).dialog("close")
 	$("#edge-dialog").keyup (e) ->
 		if e.keyCode == 13
-			alert "saved!"
+			alert "saved!"	#TODO Handle keycode saving...
 
 # Converts a name to an ID
 @dirt.name2id = (name) -> return "job_#{name}"
@@ -141,7 +136,7 @@ inspect = (d) -> console.log("#{d}\n" + ("#{i}: #{k}, " for i, k of d).join())
 	job = document.createElement("div")
 	job.id = dirt.name2id(name)
 	job.innerHTML = name
-	$(job).addClass("job")
+	$(job).addClass("job no-select")
 	if type == drt.Job.Types.Fork
 		$(job).addClass("fork")
 	else if type == drt.Job.Types.Merge
@@ -167,7 +162,6 @@ inspect = (d) -> console.log("#{d}\n" + ("#{i}: #{k}, " for i, k of d).join())
 
 # Clear the document
 @dirt.clear = ->
-	# TODO Check if this is right...
 	dirt.title = "untitled"
 	jsPlumb.deleteEveryEndpoint()
 	$("#document").empty()
@@ -175,9 +169,8 @@ inspect = (d) -> console.log("#{d}\n" + ("#{i}: #{k}, " for i, k of d).join())
 
 # Create an edge from job named source to job named target with inter-release time delay
 @dirt.addEdge = (src, dest, delay) ->
-	# TODO This creates new endpoints, that's bad, so we need a better way
 	conn = jsPlumb.connect({"source": $("#" + dirt.name2id(src)).data("endpoint"), "target": $("#" + dirt.name2id(dest)).data("endpoint")})
-	conn.delay = "#{delay}"
+	conn.delay = delay
 	jsPlumb.repaint(dirt.name2id(src))
 	return
 
@@ -189,7 +182,10 @@ inspect = (d) -> console.log("#{d}\n" + ("#{i}: #{k}, " for i, k of d).join())
 		reader = new window.FileReader()
 		reader.onloadend = (args) =>
 			if(args.target.readyState == FileReader.DONE)
-				dirt.loadXml(args.target.result)
+				if dirt.loadXml(args.target.result)
+					$.gritter.add
+								title: "Loaded task from file"
+								text: "dirt successfully loaded task \"#{dirt.name}\" from file."
 		reader.readAsText(files[0])
 		$("#file-dialog").dialog("close")
 
@@ -202,8 +198,9 @@ inspect = (d) -> console.log("#{d}\n" + ("#{i}: #{k}, " for i, k of d).join())
 		return false
 	if tasks.length > 1
 		alert "This editor only supports DRTs with one task, loading task \"#{tasks[0].name}\""
-	if dirt.validate(task[0])
-		dirt.loadTask(task[0])
+	task = tasks[0]
+	if dirt.validate(task)
+		dirt.loadTask(task)
 		return true
 	return false
 		
@@ -211,7 +208,6 @@ inspect = (d) -> console.log("#{d}\n" + ("#{i}: #{k}, " for i, k of d).join())
 @dirt.loadTask = (task) ->
 	# Clear document
 	dirt.clear()
-	task = tasks[0]
 	# Create jobs
 	for job in task.jobs
 		dirt.addJob(job.name, job.wcet, job.deadline, job.type, job.x, job.y)
@@ -219,6 +215,7 @@ inspect = (d) -> console.log("#{d}\n" + ("#{i}: #{k}, " for i, k of d).join())
 	for source in task.jobs
 		for target in task.jobs when task.edge(source, target)
 			dirt.addEdge(source.name, target.name, task.delay(source, target))
+	dirt.title = task.name
 
 # Validate a task and show errors in dialog
 @dirt.validate = (task) ->

@@ -1,19 +1,27 @@
 ﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" debug="true"><!-- Remove debug=true before deployment -->
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<title>dirt - untitled.drt</title>
 	<meta name="description" content="A web application for modeling and verification of scheduability in embedded systems using Fork-Merge Digraphs"/>
+	<!--  Custom Style Sheet -->
 	<link rel="stylesheet" type="text/css" href="static/style.css"/>
 	<!-- jQuery Minified from Google CDN -->
 	<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/ui-darkness/jquery-ui.css"/>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>
-	<!-- jsPlumb for jQuery Minified -->
+	<!-- jsPlumb for jQuery minified -->
 	<script type="text/javascript" src="static/jquery.jsPlumb-1.3.3-all-min.js"></script>
+	<!-- Gritter Notification plugin for jQuery -->
+	<link rel="stylesheet" type="text/css" href="static/gritter/css/jquery.gritter.css" />
+	<script type="text/javascript" src="static/gritter/js/jquery.gritter.min.js"></script>
+	<!-- Base64 encoding plugin for jQuery -->
+	<script type="text/javascript" src="static/jquery.base64.js"></script>
 	<!-- On-The-Fly CoffeScript compiler, remove in favor of static compilation upon stable release -->
 	<script type="text/javascript" src="static/coffee-script.js"></script>
+	<!-- FM-DRT logic implemented in CoffeeScript -->
 	<script type="text/coffeescript" src="static/drt.coffee"></script>
+	<!-- Custom UI logic in CoffeeScript -->
 	<script type="text/coffeescript" src="static/ui.coffee"></script>
 	<script type="text/coffeescript">
 		# Main must be called from the last bit of coffeescript as on-the-fly
@@ -33,7 +41,8 @@
 	</span>
 	
 	<button id="validate">Validate</button>
-	<button id="open">Open file</button>
+	<button id="open">Open</button>
+	<button id="save">Save</button>
 	<span id="mode" style="float: right; margin-right: 4px;"> <!-- Fix margin hack!!! -->
 		<input type="radio" name="radio" id="mode-model" checked="checked"/><label for="mode-model">Model</label>
 		<input type="radio" name="radio" id="mode-verify"/><label for="mode-verify">Verify</label>

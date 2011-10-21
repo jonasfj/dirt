@@ -1,0 +1,10 @@
+<drt>
+	<task name="task0">
+		<job name="v1" wcet="2" deadline="3" x="200" y="200"/>
+		<job name="v2" wcet="2" deadline="5" x="300" y="200"/>
+		<job name="v3" wcet="3" deadline="4" x="200" y="400"/>
+		<edge source="v1" target="v2" delay="4"/>
+		<edge source="v2" target="v3" delay="5"/>
+		<edge source="v3" target="v1" delay="6"/>
+	</task>
+</drt>
