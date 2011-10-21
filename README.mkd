@@ -7,10 +7,10 @@ Building dirt
 To build dirt you'll need cmake (>= 2.8). You'll typically want to do an out of source build.
 If current working directory is the source root folder (called dirt/) just do:
 
-  $ cd ..
-  $ mkdir dirt-build
-  $ cmake ../dirt
-  $ make
+    $ cd ..
+    $ mkdir dirt-build
+    $ cmake ../dirt
+    $ make
 
 This assumes your dirt checkout is in dirt/, and it will leave compiled result in ../dirt-build/.
 You can define build type by giving -DCMAKE_BUILD_TYPE=Debug|Release to cmake.

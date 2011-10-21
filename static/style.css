@@ -5,16 +5,22 @@ body{
 
 #document
 {
-width:100%;height:100%;position:absolute;overflow:hidden;right:0;top:50px
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	overflow: hidden;
+	right: 0;
+	top: 50px
 }
 
 #document .job{
 	cursor: pointer;
 	min-width: 32px;
 	background: url('images/place.png') no-repeat center;
-	z-index:20; position:absolute;
-	text-align:center;
-	padding-top:42px;
+	z-index: 20;
+	position: absolute;
+	text-align: center;
+	padding-top: 42px;
 	/*line-height:80px;*/
 }
 .no-select{
@@ -23,11 +29,10 @@ width:100%;height:100%;position:absolute;overflow:hidden;right:0;top:50px
 	-moz-user-select: none;
 	-o-user-select: none;
 	user-select: none;
-	cursor:default;
+	cursor: default;
 }
 
-.label 
-{
+.label{
 	background:white;
 	z-index:22;
 	border:solid 2px gray;

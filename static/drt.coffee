@@ -6,8 +6,8 @@ log = (msg) -> if console? and console.log? then console.log(msg) else alert(msg
 # Representation of a task
 class @drt.Task
 	constructor: (@name) ->
-	_delay: []
-	jobs: []
+		@_delay: []
+		@jobs: []
 	delay: (source, target) =>
 		# Identify if objects
 		source = source.id if typeof source is "object"
@@ -50,7 +50,7 @@ class @drt.Task
 # Representation of a job
 class @drt.Job
 	@Types = {Job: {}, Fork: {}, Merge: {}}
-	constructor: (@name, @wcet, @deadline, @type = Job.Types.Job, @id = -1) ->
+	constructor: (@name, @wcet, @deadline, @type = Job.Types.Job, @x = 0, @y = 0, @id = -1) ->
 		@preset = []
 		@postset = []
 
@@ -66,7 +66,10 @@ class @drt.Job
 				task.jobs[id] = new drt.Job($(this).attr("name"),
 											 $(this).attr("wcet"),
 											 $(this).attr("deadline"),
-											 drt.Job.Types.Job, id)	#TODO: Different job types
+											 drt.Job.Types.Job,	#TODO: Different job types
+											 $(this).attr("x") ? 0,
+											 $(this).attr("y") ? 0,
+											id)
 			for i in [0..task.jobs.length-1]
 				task._delay[i + task.jobs.length * j] = -1 for j in [0..task.jobs.length-1]
 			$(this).find("edge").each ->
@@ -90,7 +93,9 @@ class @drt.Job
 			assert false, "Job name: \"#{job.name}\" is not unique in task: #{task.name}"
 		else
 			names.push(job.name)
-	# TODO Validate job ids and correct ordering of job ids
+	# Validate job ids and correct ordering of job ids
+	for i in [0...task.jobs.length]
+		assert task.jobs[i].id is i, "Job \"#{task.jobs[i].name}\" has out-of-order id"
 	# Validate preset/postset
 	for source in task.jobs
 		for target in task.jobs
@@ -109,15 +114,15 @@ class @drt.Job
 	# Compute parents
 	P = []
 	P[j.id] = new Set() for j in task.jobs			#Initially empty
-	for f in task.jobs when f.type is Job.Types.Fork
+	for f in task.jobs when f.type is drt.Job.Types.Fork
 		P[j.id].add([f.id, j.id]) for j in f.postset	#Trivial rule
 	for i in [0..task.jobs.length]
 		# Jobs propogate to jobs and forks
-		for v in task.jobs when j.type is Job.Types.Job and P[j.id].length() > 0
-			for u in v.postset when y.type isnt Job.Types.Merge and not P[u.id].subset(P[j.id])
+		for v in task.jobs when j.type is drt.Job.Types.Job and P[j.id].length() > 0
+			for u in v.postset when y.type isnt drt.Job.Types.Merge and not P[u.id].subset(P[j.id])
 				P[u] = P[u].union(P[j.id])
 		# Merges looks ingoing jobs and forks, adopts their grand parents
-		for m in task.jobs when m.type is Job.Types.Merge
+		for m in task.jobs when m.type is drt.Job.Types.Merge
 			forks_handled = []
 			for v in m.preset
 				for [f, u] in P[v.id].elements when not f in forks_handled
@@ -160,7 +165,7 @@ class Set
 
 # Discrete Demand Bound Function
 class DiscreteDBF
-	constructor: (@dominates, @tuples = []) =>
+	constructor: (@dominates, @tuples = []) ->
 		@resort()
 	resort: =>
 		tuples = @tuples
@@ -190,7 +195,7 @@ class DiscreteDBF
 # Compute utilization of a task
 @drt.utilization = (task) ->
 	# Checks for domination
-	dominates = (t1, t2) -> return t1.time =< t2.time and t1.wcet >= t2.wcet
+	dominates = (t1, t2) -> return t1.time <= t2.time and t1.wcet >= t2.wcet
 	# Create tuple list and waiting list for each job
 	wLists = []; tList = []
 	for j in task.jobs
@@ -211,7 +216,11 @@ class DiscreteDBF
 					wcet: t.wcet + j.wcet
 					time: t.time + task.delay(job, j)
 					start: t.start
-					parent: t.parent
+					parent: t.parent	#TODO Handle special case where job.type == drt.Job.Types.Fork
+				# Note: setting a tuple as parent isn't enought... what if cycle starts in two subtasks
+				# ends there too... e.g. it might not even merge... !!! (This also the case for normal DBF)
+				# TODO Handle special case when j is a merge, we need to attempt merge with tuples at
+				# preset of j
 				if n.start is j	# Never insert loops
 					if n.wcet / n.time > U
 						U = n.wcet / n.time
