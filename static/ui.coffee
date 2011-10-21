@@ -121,11 +121,11 @@ Object::inspect = -> "#{i}: #{k}, " for i, k of @
 	return
 
 # Create an edge from job named source to job named target with inter-release time delay
-@dirt.addEdge = (source, target, delay) ->
+@dirt.addEdge = (src, dst, delay) ->
 	# TODO This creates new endpoints, that's bad, so we need a better way
-	conn = jsPlumb.connect({"source": "job_" + source, "target": "job_" + target})
+	conn = jsPlumb.connect({"source": $("#job_#{src}").data("endpoint"), "target": $("#job_#{dst}").data("endpoint")})
 	conn.delay = "#{delay}"
-	jsPlumb.repaint("job_" + source)
+	jsPlumb.repaint("job_#{src}")
 	return
 
 # Read file
