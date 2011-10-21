@@ -84,7 +84,7 @@
 			dirt.adding = false
 
 # Helper function to dump all properties of an object
-Object::inspect = -> "#{i}: #{k}, " for i, k of @
+inspect = -> alert("#{i}: #{k}, " for i, k of @)
 
 # bool whether job is being added
 @dirt.adding = false

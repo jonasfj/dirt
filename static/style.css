@@ -17,9 +17,10 @@ body{
 	cursor: pointer;
 	min-width: 32px;
 	background: url('images/place.png') no-repeat center;
-	z-index:20; position:absolute;
-	text-align:center;
-	padding-top:42px;
+	z-index: 20;
+	position: absolute;
+	text-align: center;
+	padding-top: 42px;
 	/*line-height:80px;*/
 }
 .no-select{
@@ -28,7 +29,7 @@ body{
 	-moz-user-select: none;
 	-o-user-select: none;
 	user-select: none;
-	cursor:default;
+	cursor: default;
 }
 
 .label{
