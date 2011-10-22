@@ -232,36 +232,41 @@ class DiscreteDBF
 @drt.utilization = (task) ->
 	# Checks for domination
 	dominates = (t1, t2) -> return t1.time <= t2.time and t1.wcet >= t2.wcet
-	# Create tuple list and waiting list for each job
-	wLists = []; tList = []
-	for j in task.jobs
+	# Create waiting list, tuple list and cycle list for each job
+	wLists = []; tLists = []; cLists
+	for j,i in task.jobs
 		wLists.push(new DiscreteDBF(dominates))
 		tLists.push(new DiscreteDBF(dominates))
+		cLists.push(new DiscreteDBF(dominates))
 	# Create initial tuples
 	for job in task.jobs
-		t = wcet: 0, time: 0, start: job, parent: null
+		t = wcet: 0, time: 0, start: job, parent: null, visited: new Bits(task.jobs.length, 0)
 		wLists[job.id].insert(t)
 		tLists[job.id].insert(t)
 	# Define how we expand tuples
-	U = 0
 	expandTuples = (job) ->
 		gotNews = false
 		while t = wLists[job.id].pop()
-			for j in task.jobs when task.edge(job, j)
+			# Use t as parent if job is a fork
+			p = if job.type is drt.Job.Types.Fork then t else t.parent
+			for j in task.jobs when task.edge(job, j) and not t.visited.test(j.id)
+				v = t.visited.clone()
+				v.set(j.id)
 				n =
 					wcet: t.wcet + j.wcet
 					time: t.time + task.delay(job, j)
 					start: t.start
-					parent: t.parent	#TODO Handle special case where job.type == drt.Job.Types.Fork
-				# Note: setting a tuple as parent isn't enought... what if cycle starts in two subtasks
-				# ends there too... e.g. it might not even merge... !!! (This also the case for normal DBF)
+					parent: p
+					visited: v
 				# TODO Handle special case when j is a merge, we need to attempt merge with tuples at
 				# preset of j
-				if n.start is j	# Never insert loops
-					if n.wcet / n.time > U
-						U = n.wcet / n.time
+				if n.start is j
+					# Insert cycles in cycle list, and never in waiting list!
+					cLists[j.id].insert(n)
 				else if tLists[j.id].insert(n)
 					gotNews |= wLists[j.id].insert(n)
+			# Forget visited of t as it'll only exist in tLists
+			delete t.visited
 		return gotNews
 	# Expand tuples till we're done
 	for i in [0...task.jobs.length]
@@ -269,6 +274,21 @@ class DiscreteDBF
 		for job in task.jobs
 			gotNews |= expandTuples(job)
 		break unless gotNews
+	# Define how we merge cycles
+	mergeCycles = (job) ->
+		gotNews = false
+		for j in task.jobs when canMergeByParent(j.parent, job.parent)
+			for c1 in cLists[job.id]
+				for c2 in cLists[j.id].tuples when c1.parent == c2.parent
+					res = merge(c1, c2)
+					if j.parent?
+						id = j.parent[0].id
+					else
+						id = j.id	#Not sure if this is smart...
+					gotNews |= cLists[id].insert(res)	#Not sure if domination is okay here...
+		return gotNews
+	# Find utilization...
+	
 	return U
 
 
