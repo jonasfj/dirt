@@ -19,7 +19,16 @@
 	# Open file when file dialog file is changed
 	#$("#file-dialog-file").change(@dirt.loadInput)
 	document.getElementById("file-dialog-file").addEventListener("change", @dirt.readFile, false)
-
+	
+	$("#mode-model").click ->
+		$("#add-job, #add-merge, #add-fork, #open, #validate, #save").button("enable")
+		$("#analysis").fadeOut "fast", ->
+			$("#document").fadeIn "fast", ->
+				$("#analysis").empty()
+	$("#mode-verify").click ->
+		$("#add-job, #add-merge, #add-fork, #open, #validate, #save").button("disable")
+		$("#document").fadeOut "fast", ->
+			$("#analysis").fadeIn "fast", dirt.analyze
 	# Dialog stuff open file
 	$("#open").click ->
 		unless window.File and window.FileReader and window.FileList
@@ -34,16 +43,6 @@
 		#TODO Code to detect if the browser supports this, IE obviously have some limits
 		xml = "data:application/drt+xml;base64,#{$.base64Encode(drt.writeXml(dirt.getTask()))}"
 		window.open(xml, "_blank")
-
-	$("#mode-model").click ->
-		$("#add-job, #add-merge, #add-fork, #open, #validate, #save").button("enable")
-		$("#analysis").fadeOut "fast", ->
-			$("#document").fadeIn "fast", ->
-				$("#analysis").empty()
-	$("#mode-verify").click ->
-		$("#add-job, #add-merge, #add-fork, #open, #validate, #save").button("disable")
-		$("#document").fadeOut "fast", ->
-			$("#analysis").fadeIn "fast", dirt.analyze
 
 # Init JsPlumb stuff
 @dirt.initJsPlumb = ->
@@ -107,33 +106,51 @@ inspect = (d) -> console.log("#{d}\n" + ("#{i}: #{k}, " for i, k of d).join())
 
 # Edits a job
 @dirt.editJob = (jobId) ->
+	$("#job-dialog-name").val($("#" + jobId).data("name"))
+	$("#job-dialog-wcet").val($("##{jobId}").data("wcet"))
+	$("#job-dialog-deadline").val($("##{jobId}").data("deadline"))
 	$("#job-dialog").dialog
-							modal: true
-							resizable: false
-							closeText: "cancel"
-							draggable: false
-	job = $("#"+jobId)
-	#jsPlumb.deleteEndpoint(job.data("endpoint"))
+		modal: true
+		resizable: false
+		closeText: "cancel"
+		draggable: false
+		buttons:
+			"Apply": ->
+				name = $("#job-dialog-name").val()
+				wcet = $("#job-dialog-wcet").val()
+				deadline = $("#job-dialog-deadline").val()
+				$("##{jobId}").data("name", name)
+				$("##{jobId}").data("wcet", parseInt(wcet))
+				$("##{jobId}").data("deadline", parseInt(deadline))
+				# TODO Create a method for updating the visual representation of a job...
+				$("##{jobId}").html(name + "<br><small>&lt;" + wcet + "," + deadline + "&gt;</small>")
+				# TODO Support handling type changes...
+				$(this).dialog("close")
+			"Cancel": ->
+				$(this).dialog("close")			
+			"Delete": ->
+				alert("Not supported yet")	#TODO Implement this!!
+				$(this).dialog("close")
 
 # Edits an edge
 @dirt.editEdge = (connection) ->
 	$("#edge-dialog-delay").val(connection.delay)
 	$("#edge-dialog").dialog
-							modal: true
-							resizable: false
-							closeText: "cancel"
-							draggable: false
-							buttons:
-								"Apply": ->
-									inspect(connection)
-									connection.delay = parseInt($("#edge-dialog-delay").val())
-									jsPlumb.repaint(connection.sourceId)
-									$(this).dialog("close")
-								"Cancel": ->
-									$(this).dialog("close")
-								"Delete": ->
-									jsPlumb.detach(connection.source, connection.target)
-									$(this).dialog("close")
+		modal: true
+		resizable: false
+		closeText: "cancel"
+		draggable: false
+		buttons:
+			"Apply": ->
+				inspect(connection)
+				connection.delay = parseInt($("#edge-dialog-delay").val())
+				jsPlumb.repaint(connection.sourceId)
+				$(this).dialog("close")
+			"Cancel": ->
+				$(this).dialog("close")
+			"Delete": ->
+				jsPlumb.detach(connection.source, connection.target)
+				$(this).dialog("close")
 	$("#edge-dialog").keyup (e) ->
 		if e.keyCode == 13
 			alert "saved!"	#TODO Handle keycode saving...
@@ -166,8 +183,8 @@ inspect = (d) -> console.log("#{d}\n" + ("#{i}: #{k}, " for i, k of d).join())
 	$(job).data("type", 	type)
 	$(job).data("wcet", 	wcet)
 	$(job).data("deadline", deadline)
-	$(job).bind "dblclick", (job) ->
-		dirt.editJob(job)
+	$(job).bind "dblclick", ->
+		dirt.editJob(job.id)
 	jsPlumb.draggable(job.id)
 
 # Clear the document
@@ -256,7 +273,7 @@ inspect = (d) -> console.log("#{d}\n" + ("#{i}: #{k}, " for i, k of d).join())
 			type = drt.Job.Types.Fork
 		if $(this).hasClass("merge")
 			type = drt.Job.Types.Merge
-		jobs.push(new drt.Job(name, wcet, deadline, type, pos.top ,pos.left))
+		jobs.push(new drt.Job(name, wcet, deadline, type, pos.left, pos.top))
 	task = new drt.Task(dirt.title, jobs)
 	$("#document .job").each ->
 		source = $(this).data("name")
@@ -270,10 +287,10 @@ inspect = (d) -> console.log("#{d}\n" + ("#{i}: #{k}, " for i, k of d).join())
 # Populate analysis with something interesting
 dirt.analyze = ->
 	task = dirt.getTask()
-	dirt.validate(task)
-	U = drt.utilization(task)
-	$("#analysis").append("<br><br><h1 style='padding-left: 80px;'>Utilization: #{U}</h1>")
-	$.gritter.add
+	if dirt.validate(task)
+		U = drt.utilization(task)
+		$("#analysis").append("<br><br><h1 style='padding-left: 80px;'>Utilization: #{U}</h1>")
+		$.gritter.add
 				title: "Task utilization computed"
 				text: "Utilization of task \"#{dirt.name}\" was computed to #{U}."
 

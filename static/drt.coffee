@@ -58,8 +58,8 @@ class @drt.Job
 			$(this).find("job").each ->
 				id = task.jobs.length
 				task.jobs[id] = new drt.Job($(this).attr("name"),
-											 $(this).attr("wcet"),
-											 $(this).attr("deadline"),
+											 parseInt($(this).attr("wcet")),
+											 parseInt($(this).attr("deadline")),
 											 $(this).attr("type") ? drt.Job.Types.Job,
 											 $(this).attr("x") ? 0,
 											 $(this).attr("y") ? 0,
@@ -69,7 +69,7 @@ class @drt.Job
 			$(this).find("edge").each ->
 				task.addEdge(task.id($(this).attr("source")),
 							 task.id($(this).attr("target")),
-							 $(this).attr("delay"))
+							 parseInt($(this).attr("delay")))
 			tasks.push(task)
 	return tasks
 
@@ -135,6 +135,14 @@ Assert = (cond, msg = "Assertion Failed") -> alert(msg) unless cond
 			Require false, "Job name: \"#{job.name}\" is not unique in task: #{task.name}"
 		else
 			names.push(job.name)
+	# Check if wcet and deadline is numbers
+	for job in task.jobs
+		Require typeof job.wcet is "number", "wcet of job \"#{job.name}\" isn't a number!"
+		Require typeof job.deadline is "number", "deadline of job \"#{job.name}\" isn't a number!"
+	for source in task.jobs
+		for target in task.jobs when task.edge(source, target)
+			Require typeof task.delay(source, target) is "number",
+					"Inter-release time from \"#{source.name}\" to \"#{target.name}\" is not a number"
 	# Validate job ids and correct ordering of job ids
 	for i in [0...task.jobs.length]
 		Require task.jobs[i].id is i, "Job \"#{task.jobs[i].name}\" has out-of-order id"
@@ -231,6 +239,8 @@ class DiscreteDBF
 		# Remove tuple from list
 		return @tuples.pop()
 
+inspect = (d, msg = "") -> console.log("#{msg}: " + ("#{i}: #{k}, " for i, k of d).join())
+
 # Compute utilization of a task
 @drt.utilization = (task) ->
 	MAX = (v1, v2) -> if v1 > v2 then v1 else v2
@@ -281,29 +291,27 @@ class DiscreteDBF
 		gotNews = false
 		while t = wLists[job.id].pop()
 			for j in task.jobs when task.edge(job, j) and not t.visited.test(j.id)
-				# TODO Handle special case when j is a merge, we need to attempt merge with tuples at
-				# preset of j
+				# Handle special case when j is a merge, we need to attempt merge with tuples at preset of j
 				if j.type == drt.Job.Types.Merge
 					# Skip merge for cycles that started in a sub-task, they will be detected elsewhere
-					if n.pred is init_pred
+					if t.pred is init_pred
 						continue # This is possible because start from every position
 					# Note this requires that preset is 2! Otherwise all possible combinations of mergeable tuples
 					# becomes complicated, e.g. exponential, which is bad... and nasty to code.
 					Assert j.preset.length == 2, "drt.utilization: We assume preset of merge is always 2"
 					v = j.preset[if j.preset[0] is job then 1 else 0]
 					# For each tuple in v that we must merge with
-					for vt in tLists[v.id] when vt.pred is t.pred	
-						vis = t.visited.clone()
-						vis.or(vt.visited)
+					for vt in tLists[v.id] when vt.pred is t.pred
+						vis = Bits.or(t.visited, vt.visited)
 						vis.set(j.id)
-						nt = 
+						n = 
 							wcet: t.wcet + vt.wcet - t.pred.wcet + j.wcet
 							time: MAX(t.time + task.delay(job, j), vt.time + task.delay(v, j))
 							start: t.start
-							pred: t.pred
+							pred: t.pred.pred
 							visited: vis
 						Assert t.start == vt.start, "Starts of tuples with same predecessor must be equal"
-						gotNews |= addTuple(j, nt)
+						gotNews |= addTuple(j, n)
 				else
 					vis = t.visited.clone()
 					vis.set(j.id)
@@ -314,8 +322,6 @@ class DiscreteDBF
 						pred: if job.type is drt.Job.Types.Fork then t else t.pred # Use t as pred if job is a fork
 						visited: vis
 					gotNews |= addTuple(j, n)
-			# Forget visited of t as t only exist in tLists
-			delete t.visited
 		return gotNews
 	# Expand tuples till we're done
 	for i in [0..task.jobs.length]
