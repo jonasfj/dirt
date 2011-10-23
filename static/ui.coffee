@@ -35,6 +35,16 @@
 		xml = "data:application/drt+xml;base64,#{$.base64Encode(drt.writeXml(dirt.getTask()))}"
 		window.open(xml, "_blank")
 
+	$("#mode-model").click ->
+		$("#add-job, #add-merge, #add-fork, #open, #validate, #save").button("enable")
+		$("#analysis").fadeOut "fast", ->
+			$("#document").fadeIn "fast", ->
+				$("#analysis").empty()
+	$("#mode-verify").click ->
+		$("#add-job, #add-merge, #add-fork, #open, #validate, #save").button("disable")
+		$("#document").fadeOut "fast", ->
+			$("#analysis").fadeIn "fast", dirt.analyze
+
 # Init JsPlumb stuff
 @dirt.initJsPlumb = ->
 	# Set container for the document
@@ -257,4 +267,13 @@ inspect = (d) -> console.log("#{d}\n" + ("#{i}: #{k}, " for i, k of d).join())
 			task.addEdge(id, task.id(target), conn.delay)
 	return task
 
+# Populate analysis with something interesting
+dirt.analyze = ->
+	task = dirt.getTask()
+	dirt.validate(task)
+	U = drt.utilization(task)
+	$("#analysis").append("<br><br><h1 style='padding-left: 80px;'>Utilization: #{U}</h1>")
+	$.gritter.add
+				title: "Task utilization computed"
+				text: "Utilization of task \"#{dirt.name}\" was computed to #{U}."
 

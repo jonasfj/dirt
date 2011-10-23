@@ -37,7 +37,8 @@
 <div class="widget ui-widget-header ui-corner-all" style="padding: 2px;">
 
 	<span id="jobs">
-		<button id="add-job">Add Job</button>		
+		<!-- TODO These needs to be toggle buttons, e.g. radios or exclusive checkboxes -->
+		<button id="add-job">Add Job</button>
 		<button id="add-fork">Add Fork</button>
 		<button id="add-merge">Add Merge</button>
 	</span>
@@ -45,7 +46,7 @@
 	<button id="validate">Validate</button>
 	<button id="open">Open</button>
 	<button id="save">Save</button>
-	<span id="mode" style="float: right; margin-right: 4px;"> <!-- Fix margin hack!!! -->
+	<span id="mode" style="float: right; margin-right: 4px;"> <!-- TODO: Fix margin hack!!! -->
 		<input type="radio" name="radio" id="mode-model" checked="checked"/><label for="mode-model">Model</label>
 		<input type="radio" name="radio" id="mode-verify"/><label for="mode-verify">Verify</label>
 	</span>
@@ -53,6 +54,9 @@
 
 <div id="document" class="widget">
 </div>
+
+<div id="analysis">
+<div>
 
 <div id="file-dialog" style="display: none;">
 	Select a file to open:<br/><br/>

@@ -94,6 +94,9 @@ class @drt.Job
 # Create a simple tuple
 Tuple = (tuple...) -> return Object.freeze(tuple)
 
+# Simple assert method
+Assert = (cond, msg = "Assertion Failed") -> alert(msg) unless cond
+
 # Compute parents returns true if successful
 @drt.computeParents = (task) ->
 	# Reset all parents
@@ -121,7 +124,7 @@ Tuple = (tuple...) -> return Object.freeze(tuple)
 # Validate Well-formedness of task and parallel isolation property
 @drt.validate = (task, output = log) ->
 	retval = true
-	assert = (cond, msg) =>
+	Require = (cond, msg) =>
 		unless cond
 			output "validation-error: #{msg}"
 			retval = false
@@ -129,29 +132,29 @@ Tuple = (tuple...) -> return Object.freeze(tuple)
 	names = []
 	for job in task.jobs
 		if job.name in names
-			assert false, "Job name: \"#{job.name}\" is not unique in task: #{task.name}"
+			Require false, "Job name: \"#{job.name}\" is not unique in task: #{task.name}"
 		else
 			names.push(job.name)
 	# Validate job ids and correct ordering of job ids
 	for i in [0...task.jobs.length]
-		assert task.jobs[i].id is i, "Job \"#{task.jobs[i].name}\" has out-of-order id"
+		Require task.jobs[i].id is i, "Job \"#{task.jobs[i].name}\" has out-of-order id"
 	# Validate preset/postset
 	for source in task.jobs
 		for target in task.jobs
 			if task.edge(source, target)
-				assert source in target.preset, "#{source.name} not in preset of #{target.name}"
-				assert target in source.postset, "#{target.name} not in postset of #{source.name}"
+				Require source in target.preset, "#{source.name} not in preset of #{target.name}"
+				Require target in source.postset, "#{target.name} not in postset of #{source.name}"
 			if source in target.preset
-				assert task.edge(source, target), "#{source.name} is in preset of #{target.name}"
+				Require task.edge(source, target), "#{source.name} is in preset of #{target.name}"
 			if target in source.postset
-				assert task.edge(source, target), "#{target.name} is in postset of #{source.name}"
+				Require task.edge(source, target), "#{target.name} is in postset of #{source.name}"
 	# Verify frame separation property
 	for source in task.jobs
 		for target in source.postset
-			assert task.delay(source, target) >= source.deadline,
+			Require task.delay(source, target) >= source.deadline,
 				"Frame separation property violation from #{source.name} to #{target.name}"
 	# Compute parents
-	assert drt.computeParents(task), "Task isn't parallel isolated"
+	Require drt.computeParents(task), "Task isn't parallel isolated"
 	# Check trace auxiliary function
 	check_trace = (parent, fork, visited = [])->
 		if not parent?
@@ -162,12 +165,12 @@ Tuple = (tuple...) -> return Object.freeze(tuple)
 		return check_trace(parent[0].parent, fork, visited)
 	# Check trace for all forks
 	for f in task.jobs when f.type is drt.Job.Types.Fork
-		assert check_trace(f.parent, f), "Fork #{f.name} can fork itself infinitely"
+		Require check_trace(f.parent, f), "Fork #{f.name} can fork itself infinitely"
 	# Check cardinality for all forks and merges
 	for f in task.jobs when f.type is drt.Job.Types.Fork
-		assert f.postset.length == 2, "postset of #{f.name} isn't 2"
+		Require f.postset.length == 2, "postset of #{f.name} isn't 2"
 	for m in task.jobs when m.type is drt.Job.Types.Merge
-		assert m.preset.length == 2, "preset of #{m.name} isn't 2"
+		Require m.preset.length == 2, "preset of #{m.name} isn't 2"
 	return retval
 
 # Set of tuples
@@ -195,7 +198,7 @@ class Set
 			return true if retval
 		return false
 	add: (element) =>
-		@elements.push(Object.freeze(element)) unless @contains(element)
+		@elements.push(element) unless @contains(element)
 	length: => @elements.length
 
 
@@ -230,65 +233,122 @@ class DiscreteDBF
 
 # Compute utilization of a task
 @drt.utilization = (task) ->
-	# Checks for domination
-	dominates = (t1, t2) -> return t1.time <= t2.time and t1.wcet >= t2.wcet
-	# Create waiting list, tuple list and cycle list for each job
-	wLists = []; tLists = []; cLists
+	MAX = (v1, v2) -> if v1 > v2 then v1 else v2
+	# Create waiting list and tuple list for each job
+	wLists = []; tLists = []
 	for j,i in task.jobs
-		wLists.push(new DiscreteDBF(dominates))
-		tLists.push(new DiscreteDBF(dominates))
-		cLists.push(new DiscreteDBF(dominates))
+		wLists.push([])
+		tLists.push([])
+	# Create cycle list for each parent type
+	cLists = {}			# Cycles that runs in parallel, and needs to be summed and move to topCycles
+	topCycle = 0		# The maximum cycle in top-level, can never be summed with other cycles
+	for f in task.jobs when f.type is drt.Job.Types.Fork
+		cLists[f.id] = {}
+		cLists[f.id][j.id] = 0 for j in f.postset
+	# Create initial predecessor that will always have it self as predecessor
+	init_pred = {}
+	init_pred.pred = init_pred
 	# Create initial tuples
 	for job in task.jobs
-		t = wcet: 0, time: 0, start: job, parent: null, visited: new Bits(task.jobs.length, 0)
-		wLists[job.id].insert(t)
-		tLists[job.id].insert(t)
+		t = wcet: 0, time: 0, start: job, pred: init_pred, visited: new Bits(task.jobs.length, 0)
+		wLists[job.id].push(t)
+		tLists[job.id].push(t)
+	# Define how cycles are added
+	addCycle = (parent, cycle) ->
+		if parent?
+			[f, i] = job.parent
+			if cLists[f.id][i] < cycle
+				cLists[f.id][i] = cycle
+				return true
+		else
+			if topCycle < cycle
+				topCycle = cycle
+				return true
+		return false
+	# Define how tuples are added, where job is the new endpoint
+	addTuple = (job, tuple) ->
+		if tuple.start is job
+			# Insert cycles in cycle list, and never in waiting list!
+			Assert tuple.pred is init_pred, "How can a cycle have a predecessor? when it ended where it started!"
+			addCycle(job.parent, tuple.wcet / tuple.time)
+			return false
+		else
+			tLists[job.id].push(tuple)
+			wLists[job.id].push(tuple)
+			return true
 	# Define how we expand tuples
 	expandTuples = (job) ->
 		gotNews = false
 		while t = wLists[job.id].pop()
-			# Use t as parent if job is a fork
-			p = if job.type is drt.Job.Types.Fork then t else t.parent
 			for j in task.jobs when task.edge(job, j) and not t.visited.test(j.id)
-				v = t.visited.clone()
-				v.set(j.id)
-				n =
-					wcet: t.wcet + j.wcet
-					time: t.time + task.delay(job, j)
-					start: t.start
-					parent: p
-					visited: v
 				# TODO Handle special case when j is a merge, we need to attempt merge with tuples at
 				# preset of j
-				if n.start is j
-					# Insert cycles in cycle list, and never in waiting list!
-					cLists[j.id].insert(n)
-				else if tLists[j.id].insert(n)
-					gotNews |= wLists[j.id].insert(n)
-			# Forget visited of t as it'll only exist in tLists
+				if j.type == drt.Job.Types.Merge
+					# Skip merge for cycles that started in a sub-task, they will be detected elsewhere
+					if n.pred is init_pred
+						continue # This is possible because start from every position
+					# Note this requires that preset is 2! Otherwise all possible combinations of mergeable tuples
+					# becomes complicated, e.g. exponential, which is bad... and nasty to code.
+					Assert j.preset.length == 2, "drt.utilization: We assume preset of merge is always 2"
+					v = j.preset[if j.preset[0] is job then 1 else 0]
+					# For each tuple in v that we must merge with
+					for vt in tLists[v.id] when vt.pred is t.pred	
+						vis = t.visited.clone()
+						vis.or(vt.visited)
+						vis.set(j.id)
+						nt = 
+							wcet: t.wcet + vt.wcet - t.pred.wcet + j.wcet
+							time: MAX(t.time + task.delay(job, j), vt.time + task.delay(v, j))
+							start: t.start
+							pred: t.pred
+							visited: vis
+						Assert t.start == vt.start, "Starts of tuples with same predecessor must be equal"
+						gotNews |= addTuple(j, nt)
+				else
+					vis = t.visited.clone()
+					vis.set(j.id)
+					n =
+						wcet: t.wcet + j.wcet
+						time: t.time + task.delay(job, j)
+						start: t.start
+						pred: if job.type is drt.Job.Types.Fork then t else t.pred # Use t as pred if job is a fork
+						visited: vis
+					gotNews |= addTuple(j, n)
+			# Forget visited of t as t only exist in tLists
 			delete t.visited
 		return gotNews
 	# Expand tuples till we're done
-	for i in [0...task.jobs.length]
+	for i in [0..task.jobs.length]
 		gotNews = false
 		for job in task.jobs
 			gotNews |= expandTuples(job)
 		break unless gotNews
 	# Define how we merge cycles
-	mergeCycles = (job) ->
-		gotNews = false
-		for j in task.jobs when canMergeByParent(j.parent, job.parent)
-			for c1 in cLists[job.id]
-				for c2 in cLists[j.id].tuples when c1.parent == c2.parent
-					res = merge(c1, c2)
-					if j.parent?
-						id = j.parent[0].id
-					else
-						id = j.id	#Not sure if this is smart...
-					gotNews |= cLists[id].insert(res)	#Not sure if domination is okay here...
-		return gotNews
+	mergeCycles = (fork) ->
+		sum = 0
+		for j in f.postset
+			sum += cLists[f.id][j.id]
+		return addCycle(fork.parent, sum)
+	# While we're merging cycles, continue to do so...
+	mergedCycle = true
+	while mergedCycle
+		mergedCycle = false
+		for f in task.jobs when f.type is drt.Job.Types.Fork
+			mergedCycle |= mergeCycles(f)
+	return topCycle
 	# Find utilization...
+	# Rule one:
+	# c1 from v1 with v1.parent = [f1, y]
+	# c2 from v2 with v2.parent = [f1, x]
+	# Can be summed if c1.pred = c2.pred, regardless of c1.pred == null or not...
+	# c3 = c1 + c2 has c3.pred = c1.pred.pred and is at v3 with v3.parent = f1.parent, note: v3 could be f1
+	# Rule two:
+	# c1 from v1 with v1.parent = [f1, y]
+	# Can become c2 = c1 with c2.pred = c1.pred.pred and is at v2 with v2.parent = f1.parent, note v2 could be f1
+	# The two rules are applied untill no new tuples are produced...
+	# Note: pred.pred is null if pred is null
 	
+	# Discussion: Is domination okay???
 	return U
 
 

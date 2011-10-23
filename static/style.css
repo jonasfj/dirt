@@ -5,7 +5,7 @@ body{
 
 #document {
 	width: 100%;
-	height: 100%;
+	height: 100%; /* TODO: Fix this, 100% is not good, maybe we should use tables or something... */
 	position: absolute;
 	overflow: hidden;
 	right: 0;
@@ -26,6 +26,16 @@ body{
 #document .fork{ background: url('images/fork.png') no-repeat center; }
 #document .merge{ background: url('images/merge.png') no-repeat center; }
 
+/* Same size as document */
+#analysis{
+	display: none;
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	overflow: hidden;
+	right: 0;
+	top: 50px
+}
 
 .no-select{
 	-webkit-user-select: none;
