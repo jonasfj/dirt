@@ -1,0 +1,20 @@
+<drt>
+	<task name="untitled">
+		<job name="j_0" wcet="5" deadline="10" type="job" x="52" y="196"/>
+		<job name="j_1" wcet="5" deadline="10" type="job" x="17" y="351"/>
+		<job name="j_2" wcet="5" deadline="10" type="job" x="-26" y="262"/>
+		<job name="j_3" wcet="2" deadline="2" type="fork" x="109" y="289"/>
+		<job name="j_4" wcet="3" deadline="4" type="merge" x="94" y="473"/>
+		<job name="j_5" wcet="3" deadline="6" type="job" x="84" y="372"/>
+		<job name="j_6" wcet="2" deadline="4" type="job" x="159" y="376"/>
+		<edge source="j_0" target="j_1" delay="10"/>
+		<edge source="j_1" target="j_2" delay="10"/>
+		<edge source="j_1" target="j_3" delay="10"/>
+		<edge source="j_2" target="j_0" delay="10"/>
+		<edge source="j_3" target="j_5" delay="2"/>
+		<edge source="j_3" target="j_6" delay="5"/>
+		<edge source="j_4" target="j_1" delay="10"/>
+		<edge source="j_5" target="j_4" delay="8"/>
+		<edge source="j_6" target="j_4" delay="5"/>
+	</task>
+</drt>

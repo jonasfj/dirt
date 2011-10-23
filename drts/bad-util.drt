@@ -1,0 +1,42 @@
+<drt>
+	<task name="untitled">
+		<job name="j_0" wcet="5" deadline="10" type="job" x="536" y="1"/>
+		<job name="j_1" wcet="5" deadline="10" type="job" x="676" y="147"/>
+		<job name="j_2" wcet="5" deadline="10" type="job" x="841" y="49"/>
+		<job name="j_3" wcet="2" deadline="2" type="fork" x="532" y="318"/>
+		<job name="j_4" wcet="3" deadline="4" type="merge" x="841" y="333"/>
+		<job name="j_5" wcet="3" deadline="3" type="job" x="655" y="393"/>
+		<job name="j_6" wcet="2" deadline="4" type="job" x="652" y="279"/>
+		<job name="j_7" wcet="2" deadline="3" type="job" x="553" y="530"/>
+		<job name="j_8" wcet="2" deadline="3" type="job" x="772" y="527"/>
+		<job name="j_9" wcet="1" deadline="1" type="job" x="822" y="144"/>
+		<job name="j_10" wcet="1" deadline="1" type="job" x="991" y="150"/>
+		<job name="j_11" wcet="1" deadline="1" type="job" x="942" y="33"/>
+		<job name="j_12" wcet="0" deadline="1" type="fork" x="880" y="266"/>
+		<job name="j_13" wcet="0" deadline="1" type="merge" x="1061" y="283"/>
+		<job name="j_14" wcet="1" deadline="1" type="job" x="976" y="242"/>
+		<job name="j_15" wcet="1" deadline="1" type="job" x="971" y="342"/>
+		<edge source="j_0" target="j_1" delay="10"/>
+		<edge source="j_1" target="j_2" delay="10"/>
+		<edge source="j_1" target="j_3" delay="10"/>
+		<edge source="j_2" target="j_0" delay="10"/>
+		<edge source="j_3" target="j_5" delay="2"/>
+		<edge source="j_3" target="j_6" delay="5"/>
+		<edge source="j_4" target="j_1" delay="10"/>
+		<edge source="j_5" target="j_4" delay="8"/>
+		<edge source="j_5" target="j_7" delay="3"/>
+		<edge source="j_6" target="j_4" delay="5"/>
+		<edge source="j_6" target="j_9" delay="10"/>
+		<edge source="j_7" target="j_8" delay="3"/>
+		<edge source="j_8" target="j_5" delay="3"/>
+		<edge source="j_9" target="j_10" delay="1"/>
+		<edge source="j_10" target="j_11" delay="1"/>
+		<edge source="j_10" target="j_12" delay="1"/>
+		<edge source="j_11" target="j_9" delay="20"/>
+		<edge source="j_12" target="j_14" delay="1"/>
+		<edge source="j_12" target="j_15" delay="1"/>
+		<edge source="j_13" target="j_10" delay="1"/>
+		<edge source="j_14" target="j_13" delay="2"/>
+		<edge source="j_15" target="j_13" delay="2"/>
+	</task>
+</drt>
