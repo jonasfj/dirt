@@ -46,6 +46,7 @@
 
 # Init JsPlumb stuff
 @dirt.initJsPlumb = ->
+	jsPlumb.setRenderMode(jsPlumb.SVG)
 	# Set container for the document
 	jsPlumb.Defaults.Container = "document"
 	jsPlumb.Defaults.DragOptions = cursor: "pointer", zIndex: 2000
@@ -185,7 +186,7 @@ inspect = (d) -> console.log("#{d}\n" + ("#{i}: #{k}, " for i, k of d).join())
 	$(job).data("deadline", deadline)
 	$(job).bind "dblclick", ->
 		dirt.editJob(job.id)
-	jsPlumb.draggable(job.id)
+	jsPlumb.draggable($("#"+job.id))
 
 # Clear the document
 @dirt.clear = ->

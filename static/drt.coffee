@@ -266,7 +266,7 @@ inspect = (d, msg = "") -> console.log("#{msg}: " + ("#{i}: #{k}, " for i, k of 
 	# Define how cycles are added
 	addCycle = (parent, cycle) ->
 		if parent?
-			[f, i] = job.parent
+			[f, i] = parent
 			if cLists[f.id][i] < cycle
 				cLists[f.id][i] = cycle
 				return true
