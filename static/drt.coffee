@@ -238,6 +238,12 @@ class DiscreteDBF
 	pop: =>
 		# Remove tuple from list
 		return @tuples.pop()
+	parallel: (dbf) =>
+		#TODO Do a parallel composition with dbf
+		return false # True, if this was modified
+	sequential: (dbf) =>
+		#TODO Do a sequential composition with dbf
+		return false # True, if this was modified
 
 inspect = (d, msg = "") -> console.log("#{msg}: " + ("#{i}: #{k}, " for i, k of d).join())
 
@@ -342,19 +348,73 @@ inspect = (d, msg = "") -> console.log("#{msg}: " + ("#{i}: #{k}, " for i, k of 
 		for f in task.jobs when f.type is drt.Job.Types.Fork
 			mergedCycle |= mergeCycles(f)
 	return topCycle
-	# Find utilization...
-	# Rule one:
-	# c1 from v1 with v1.parent = [f1, y]
-	# c2 from v2 with v2.parent = [f1, x]
-	# Can be summed if c1.pred = c2.pred, regardless of c1.pred == null or not...
-	# c3 = c1 + c2 has c3.pred = c1.pred.pred and is at v3 with v3.parent = f1.parent, note: v3 could be f1
-	# Rule two:
-	# c1 from v1 with v1.parent = [f1, y]
-	# Can become c2 = c1 with c2.pred = c1.pred.pred and is at v2 with v2.parent = f1.parent, note v2 could be f1
-	# The two rules are applied untill no new tuples are produced...
-	# Note: pred.pred is null if pred is null
-	
-	# Discussion: Is domination okay???
+	# TODO: Discuss if domination can be used here...
 	return U
 
-
+@drt.computeDBF = (task, bound) ->
+	dominates = (t1, t2) -> t1.time <= t2.time and t1.wcet >= t2.wcet
+	# Create waiting list and tuple list for each job
+	wLists = []; tLists = []
+	for j,i in task.jobs
+		wLists.push(new DiscreteDBF())
+		tLists.push(new DiscreteDBF())
+	# Create initial predecessor that will always have it self as predecessor
+	init_pred = wcet: 0, time: 0, pred: null #pred is set below
+	init_pred.pred = init_pred
+	# Create initial tuples
+	for job in task.jobs
+		t = wcet: job.wcet, time: job.deadline, pred: init_pred
+		wLists[job.id].insert(t)
+		tLists[job.id].insert(t)
+	# Define how tuples are inserted
+	insertTuple = (job, tuple) ->
+		if tuple.time < bound and tLists[job.id].insert(tuple)
+			return wLists[job.id].insert(tuple)
+		return false
+	# Define how tuples are expanded
+	expandTuples = (job) ->
+		gotNews = false
+		while t = wLists[job.id].pop()
+			for j in task.jobs when task.edge(job, j)
+				# Handle special case when j is a merge, we need to attempt merge with tuples at preset of j
+				if j.type == drt.Job.Types.Merge
+					# Note this requires that preset is 2! Otherwise all possible combinations of mergeable tuples
+					# becomes complicated, e.g. exponential, which is bad... and nasty to code.
+					Assert j.preset.length == 2, "drt.computeDBF: We assume preset of merge is always 2"
+					v = j.preset[if j.preset[0] is job then 1 else 0]
+					# For each tuple in v that we must merge with (e.g. predecessor is the same)
+					for vt in tLists[v.id] when vt.pred is t.pred
+						t_time = t.time + task.delay(job, j) - job.deadline
+						v_time = vt.time + task.delay(v, j) - v.deadline
+						n = 
+							wcet: t.wcet + vt.wcet - t.pred.wcet + j.wcet
+							time: MAX(t_time, v_time) + j.deadline
+							pred: t.pred.pred
+						gotNews |= insertTuple(j, n)
+				else
+					n =
+						wcet: t.wcet + j.wcet
+						time: t.time + task.delay(job, j) - job.deadline + j.deadline
+						pred: if job.type is drt.Job.Types.Fork then t else t.pred # Use t as pred if job is a fork
+					gotNews |= insertTuple(j, n)
+		return gotNews
+	# Expand tuples
+	for t in [0..bound]
+		gotNews = false
+		for job in task.jobs
+			gotNews |= expandTuples(job)
+		break unless gotNews
+	# TODO: Merge the tuples we've generated...
+	# Rule one:
+	# t1 from v1 with v1.parent = [f1, y]
+	# t2 from v2 with v2.parent = [f1, x]
+	# Can be summed if t1.pred = t2.pred, t3 is constructed as follows:
+	# t3.wcet = t1.wcet + t2.wcet
+	# t3.time = max(t1.time, t2.time)
+	# t3.pred = t1.pred.pred (which is the same as t2.pred.pred)
+	# t3 is stored at node v3 with v3.parent = f1.parent, note v3 could be f1
+	# Rule two:
+	# t1 from v1 with v1.parent = [f1, y]
+	# Can become t2 = t1 with t2.pred = t1.pred.pred and is stored at v2 with v2.parent = f1.parent, note v2 could be f1
+	# The two rules are applied untill no new tuples are produced...
+	# TODO: Discuss if domination can be used here...
